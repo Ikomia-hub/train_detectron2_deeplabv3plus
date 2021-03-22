@@ -118,11 +118,9 @@ class LossEvalHook(HookBase):
         metrics_dict["nb_iter"]=self.trainer.storage.latest()["time"][1]
         self.train_process.log_metrics(metrics_dict)
 
-        if self.waiting>self.patience:
+        if self.waiting>self.patience and self.patience>=0:
             self.trainer.run=False
         comm.synchronize()
-
-        # simple early stopping criteria
         return losses
 
     def _get_loss(self, data):
@@ -177,6 +175,9 @@ class MyTrainer(DefaultTrainer):
             self.cfg.PATIENCE
         ))
         return hooks
+
+    def build_writers(self):
+        return []
 
     def train(self):
 
@@ -294,12 +295,12 @@ class MyMapper(DatasetMapper):
             return dataset_dict
         return dataset_dict
 
-def register_train_test(dataset_dict,metadata,test_ratio=0.33,seed=0):
+def register_train_test(dataset_dict,metadata,train_ratio=0.66,seed=0):
     DatasetCatalog.clear()
     nb_input= len(dataset_dict)
     x=np.arange(nb_input)
     random.Random(seed).shuffle(x)
-    idx_split = int(len(x) * (1 - test_ratio))
+    idx_split = int(len(x) * train_ratio)
     DatasetCatalog.register("datasetTrain", my_dataset_function({"images":np.array(dataset_dict)[x[:idx_split]],"metadata":metadata}))
     DatasetCatalog.register("datasetTest", my_dataset_function({"images":np.array(dataset_dict)[x[idx_split:]],"metadata":metadata}))
     MetadataCatalog.get("datasetTrain").stuff_classes = [v for k,v in metadata["category_names"].items()]

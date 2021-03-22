@@ -9,7 +9,6 @@ MODEL:
     ASPP_DROPOUT: 0.1
     CONVS_DIM: 256
     COMMON_STRIDE: 16
-    #NUM_CLASSES: 2
     LOSS_TYPE: "hard_pixel_mining"
 DATASETS:
   TRAIN: ("cityscapes_fine_sem_seg_train",)
