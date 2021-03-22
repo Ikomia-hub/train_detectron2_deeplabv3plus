@@ -1,3 +1,4 @@
+import update_path
 from ikomia import core, dataprocess
 import copy
 from ikomia.dnn import dataset, datasetio
