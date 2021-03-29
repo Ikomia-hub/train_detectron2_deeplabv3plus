@@ -1,19 +1,13 @@
+import update_path
 from ikomia import core, dataprocess
 import copy
-from ikomia.dnn import dataset, datasetio
-from detectron2.config import get_cfg
+from ikomia.dnn import datasetio
 from ikomia.dnn import dnntrain
 import deeplabutils
-import os
 from detectron2.config import get_cfg, CfgNode
-from detectron2 import model_zoo
-from detectron2.engine import DefaultTrainer,DefaultPredictor
-import json
-import torch
 import os
 from detectron2.projects.deeplab import add_deeplab_config
-import numpy
-from detectron2.modeling import build_model
+
 
 # Your imports below
 
@@ -36,7 +30,6 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         self.polyLRConstantFactor = 0.0
         self.batchSize = 4
         self.resnetDepth = 50
-        self.freezeAt = 4
         self.batchNorm = "BN"
         self.ignoreValue = None
         self.baseLearningRate = 0.02
@@ -51,19 +44,11 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
     def setParamMap(self, paramMap):
         # Set parameters values from Ikomia application
         # Parameters values are stored as string and accessible like a python dict
-        # Example : self.windowSize = int(paramMap["windowSize"])
         self.cfg = paramMap["cfg"]
         self.inputSize = paramMap["inputSize"]
-        #self.numClasses = paramMap["numClasses"]
         self.maxIter = paramMap["maxIter"]
-        #self.warmupFactor = paramMap["warmupFactor"]
-        #self.warmupIters = paramMap["warmupIters"]
-        #self.polyLRFactor = paramMap["polyLRFactor"]
-        #self.polyLRConstantFactor = paramMap["polyLRConstantFactor"]
         self.batchSize = paramMap["batchSize"]
         self.resnetDepth = paramMap["resnetDepth"]
-        self.freezeAt = paramMap["freezeAt"]
-        #self.batchNorm = paramMap["BN"]
         self.ignoreValue = paramMap["ignoreValue"]
         self.expertModecfg = paramMap["expertModecfg"]
         self.evalPeriod = paramMap["evalPeriod"]
@@ -78,16 +63,11 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         paramMap = core.ParamMap()
         paramMap["cfg"] = self.cfg
         paramMap["inputSize"] =self.inputSize
-        #paramMap["numClasses"] =self.numClasses
         paramMap["maxIter"] = self.maxIter
-        #paramMap["warmupFactor"] = self.warmupFactor
         paramMap["warmupIters"] = self.warmupIters
-        #paramMap["polyLRFactor"] = self.polyLRFactor
-        #paramMap["polyLRConstantFactor"] = self.polyLRConstantFactor
         paramMap["batchSize"] = self.batchSize
         paramMap["resnetDepth"] = self.resnetDepth
         paramMap["freezeAt"] = self.freezeAt
-        #paramMap["BN"] = self.batchNorm
         paramMap["ignoreValue"] = self.ignoreValue
         paramMap["expertModecfg"] = self.expertModecfg
         paramMap["evalPeriod"] = self.evalPeriod
@@ -106,8 +86,6 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
     def __init__(self, name, param):
         dnntrain.TrainProcess.__init__(self, name, param)
         # Add input/output of the process here
-        # Example :  self.addInput(PyDataProcess.CImageProcessIO())
-        #           self.addOutput(PyDataProcess.CImageProcessIO())
         self.addInput(datasetio.IkDatasetIO(dataprocess.DatasetFormat.OTHER))
         # Create parameters class
         if param is None:
@@ -130,11 +108,17 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 
         # Get parameters :
         param = self.getParam()
+
         if len(input.data["images"])>0:
             if param.expertModecfg == "":
+                # Get default config
                 cfg = get_cfg()
+
+                # Add specific deeplab config
                 add_deeplab_config(cfg)
                 cfg.merge_from_file(os.path.dirname(os.path.realpath(__file__))+"/model/configs/deeplab_v3_plus_R_103_os16_mg124_poly_90k_bs16.yaml")
+
+                # Generic dataset names that will be used
                 cfg.DATASETS.TRAIN = ("datasetTrain",)
                 cfg.DATASETS.TEST = ("datasetTest",)
                 cfg.SOLVER.MAX_ITER = param.maxIter
@@ -152,6 +136,7 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 cfg.TEST.EVAL_PERIOD = param.evalPeriod
                 cfg.SPLIT_TRAIN_TEST = param.splitTrainTest
                 cfg.SPLIT_TRAIN_TEST_SEED = None
+                cfg.MODEL.BACKBONE.FREEZE_AT=5
                 if param.earlyStopping:
                     cfg.PATIENCE = param.patience
                 else:
@@ -203,24 +188,26 @@ class Detectron2_DeepLabV3Plus_TrainProcessFactory(dataprocess.CProcessFactory):
         dataprocess.CProcessFactory.__init__(self)
         # Set process information as string here
         self.info.name = "Detectron2_DeepLabV3Plus_Train"
-        self.info.shortDescription = "your short description"
-        self.info.description = "your description"
-        self.info.authors = "Plugin authors"
+        self.info.shortDescription = "Training process for DeepLabv3+ model of Detectron2."
+        self.info.description = "Implementation from Detectron2 (Facebook Research). " \
+                                "This Ikomia plugin can train model from " \
+                                "a given config file and a weight file produced by the Ikomia " \
+                                "plugin Detectron2_DeepLabV3Plus_Train."
+        self.info.authors = "Liang-Chieh Chen, Yukun Zhu, George Papandreou, Florian Schroff, Hartwig Adam"
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python"
         self.info.version = "1.0.0"
         # self.info.iconPath = "your path to a specific icon"
-        self.info.authors = "algorithm author"
-        self.info.article = "title of associated research article"
-        self.info.journal = "publication journal"
-        self.info.year = 2021
-        self.info.license = "MIT License"
+        self.info.article = "Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation"
+        self.info.journal = "ECCV 2018"
+        self.info.year = 2018
+        self.info.license = "Apache-2.0 License"
         # URL of documentation
-        self.info.documentationLink = ""
+        self.info.documentationLink = "https://detectron2.readthedocs.io/index.html"
         # Code source repository
-        self.info.repository = ""
+        self.info.repository = "https://github.com/facebookresearch/detectron2"
         # Keywords used for search
-        self.info.keywords = "detectron2, segmentation, semantic"
+        self.info.keywords = "semantic, segmentation, detectron2, facebook, atrous, convolution, encoder, decoder"
 
     def create(self, param=None):
         # Create process object

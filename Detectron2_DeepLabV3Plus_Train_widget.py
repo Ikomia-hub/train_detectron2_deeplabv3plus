@@ -89,7 +89,7 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.patienceSpinBox.hide()
 
         qlabel = QLabel("Advanced YAML config:")
-        qbrowse_widget = BrowseFileWidget(path=self.parameters.expertModecfg, mode=QFileDialog.ExistingFile)
+        self.qbrowse_widget = BrowseFileWidget(path=self.parameters.expertModecfg, mode=QFileDialog.ExistingFile)
 
         # Set widget layout
 
@@ -113,7 +113,7 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.gridLayout.addWidget(self.patienceLabel, 8, 0, 1, 1)
         self.gridLayout.addWidget(self.patienceSpinBox, 8, 1, 1, 2)
         self.gridLayout.addWidget(qlabel, 9, 0,1,1)
-        self.gridLayout.addWidget(qbrowse_widget, 9, 1,1,2)
+        self.gridLayout.addWidget(self.qbrowse_widget, 9, 1,1,2)
 
         self.setLayout(layout_ptr)
 
@@ -144,6 +144,8 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.parameters.resnetDepth = str(self.resnetDepthComboBox.currentText())
         self.parameters.earlyStopping = self.earlyStoppingCheckBox.isChecked()
         self.parameters.patience = self.patienceSpinBox.value()
+        self.parameters.expertModecfg= self.qbrowse_widget.qedit_file.text()
+
         # Send signal to launch the process
         self.emitApply(self.parameters)
 
