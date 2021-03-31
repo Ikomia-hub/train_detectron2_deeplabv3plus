@@ -7,7 +7,7 @@ import deeplabutils
 from detectron2.config import get_cfg, CfgNode
 import os
 from detectron2.projects.deeplab import add_deeplab_config
-
+from detectron2.engine import launch
 
 # Your imports below
 
@@ -20,7 +20,6 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
     def __init__(self):
         dataprocess.CDnnTrainProcessParam.__init__(self)
         # Place default value initialization here
-        self.cfg = get_cfg()
         self.inputSize=(800,800)
         self.numClasses=2
         self.maxIter = 1000
@@ -44,36 +43,31 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
     def setParamMap(self, paramMap):
         # Set parameters values from Ikomia application
         # Parameters values are stored as string and accessible like a python dict
-        self.cfg = paramMap["cfg"]
-        self.inputSize = paramMap["inputSize"]
-        self.maxIter = paramMap["maxIter"]
-        self.batchSize = paramMap["batchSize"]
-        self.resnetDepth = paramMap["resnetDepth"]
-        self.ignoreValue = paramMap["ignoreValue"]
+        self.inputSize = tuple([int(u) for u in paramMap["inputSize"].split(' ') ])
+        self.maxIter = int(paramMap["maxIter"])
+        self.batchSize = int(paramMap["batchSize"])
+        self.resnetDepth = int(paramMap["resnetDepth"])
         self.expertModecfg = paramMap["expertModecfg"]
-        self.evalPeriod = paramMap["evalPeriod"]
-        self.earlyStopping = paramMap["earlyStopping"]
-        self.patience = paramMap["patience"]
-        self.splitTrainTest = paramMap["splitTrainTest"]
+        self.evalPeriod = int(paramMap["evalPeriod"])
+        self.earlyStopping = bool(paramMap["earlyStopping"])
+        self.patience = int(paramMap["patience"])
+        self.splitTrainTest = float(paramMap["splitTrainTest"])
+        pass
 
 
     def getParamMap(self):
         # Send parameters values to Ikomia application
         # Create the specific dict structure (string container)
         paramMap = core.ParamMap()
-        paramMap["cfg"] = self.cfg
-        paramMap["inputSize"] =self.inputSize
-        paramMap["maxIter"] = self.maxIter
-        paramMap["warmupIters"] = self.warmupIters
-        paramMap["batchSize"] = self.batchSize
-        paramMap["resnetDepth"] = self.resnetDepth
-        paramMap["freezeAt"] = self.freezeAt
-        paramMap["ignoreValue"] = self.ignoreValue
+        paramMap["inputSize"] =str(self.inputSize[0])+" "+str(self.inputSize[1])
+        paramMap["maxIter"] = str(self.maxIter)
+        paramMap["batchSize"] = str(self.batchSize)
+        paramMap["resnetDepth"] = str(self.resnetDepth)
         paramMap["expertModecfg"] = self.expertModecfg
-        paramMap["evalPeriod"] = self.evalPeriod
-        paramMap["earlyStopping"]=self.earlyStopping
-        paramMap["patience"]=self.patience
-        paramMap["splitTrainTest"]=self.splitTrainTest
+        paramMap["evalPeriod"] = str(self.evalPeriod)
+        paramMap["earlyStopping"]=str(self.earlyStopping)
+        paramMap["patience"]=str(self.patience)
+        paramMap["splitTrainTest"]=str(self.splitTrainTest)
         return paramMap
 
 
@@ -123,7 +117,7 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 cfg.DATASETS.TEST = ("datasetTest",)
                 cfg.SOLVER.MAX_ITER = param.maxIter
                 cfg.SOLVER.WARMUP_FACTOR = 0.001
-                cfg.SOLVER.WARMUP_ITERS = param.maxIter//10
+                cfg.SOLVER.WARMUP_ITERS = param.maxIter//5
                 cfg.SOLVER.POLY_LR_FACTOR = 0.9
                 cfg.SOLVER.POLY_LR_CONSTANT_FACTOR = 0.0
                 cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = len(input.data["metadata"]["category_names"])
@@ -156,7 +150,7 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 self.trainer = deeplabutils.MyTrainer(cfg,self)
                 self.trainer.resume_or_load(resume=False)
                 print("Starting training job...")
-                self.trainer.train()
+                launch(self.trainer.train,num_gpus_per_machine=1)
                 print("Training job finished.")
                 with open(cfg.OUTPUT_DIR+"/Detectron2_DeepLabV3Plus_Train_Config.yaml", 'w') as file:
                     file.write(cfg.dump())
