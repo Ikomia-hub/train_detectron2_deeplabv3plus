@@ -48,7 +48,7 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.batchSizeSpinBox = QSpinBox()
         self.batchSizeSpinBox.setRange(1, 2147483647)
         self.batchSizeSpinBox.setSingleStep(1)
-        self.batchSizeSpinBox.setValue(self.parameters.batchSize)
+        self.batchSizeSpinBox.setValue(self.parameters.batch_size)
 
         splitTrainTestLabel = QLabel("Train test percentage:")
         self.splitTrainTestSpinBox = QSpinBox()
@@ -67,7 +67,7 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.baseLearningRateSpinBox.setRange(0, 10)
         self.baseLearningRateSpinBox.setDecimals(4)
         self.baseLearningRateSpinBox.setSingleStep(0.0001)
-        self.baseLearningRateSpinBox.setValue(self.parameters.baseLearningRate)
+        self.baseLearningRateSpinBox.setValue(self.parameters.learning_rate)
 
         resnetDepthLabel = QLabel("Resnet depth:")
         self.resnetDepthComboBox = QComboBox()
@@ -90,6 +90,12 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
 
         qlabel = QLabel("Advanced YAML config:")
         self.qbrowse_widget = BrowseFileWidget(path=self.parameters.expertModecfg, mode=QFileDialog.ExistingFile)
+
+        self.numGPUQLabel = QLabel("Number of GPU:")
+        self.numGPUSpinBox = QSpinBox()
+        self.numGPUSpinBox.setRange(1,16)
+        self.numGPUSpinBox.setSingleStep(1)
+        self.numGPUSpinBox.setValue(self.parameters.numGPU)
 
         # Set widget layout
 
@@ -114,6 +120,8 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.gridLayout.addWidget(self.patienceSpinBox, 8, 1, 1, 2)
         self.gridLayout.addWidget(qlabel, 9, 0,1,1)
         self.gridLayout.addWidget(self.qbrowse_widget, 9, 1,1,2)
+        self.gridLayout.addWidget(self.numGPUQLabel,10,0,1,1)
+        self.gridLayout.addWidget(self.numGPUSpinBox,10,1,1,2)
 
         self.setLayout(layout_ptr)
 
@@ -137,14 +145,15 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
             self.parameters.inputSize = (w//16*16, h//16*16)
             print("Width and Height must be multiples of 16, they have been changed to "+str(self.parameters.inputSize))
         self.parameters.maxIter = self.maxIterSpinBox.value()
-        self.parameters.batchSize = self.batchSizeSpinBox.value()
+        self.parameters.batch_size = self.batchSizeSpinBox.value()
         self.parameters.splitTrainTest =self.splitTrainTestSpinBox.value()
         self.parameters.evalPeriod = self.evalPeriodSpinBox.value()
-        self.parameters.baseLearningRate = self.baseLearningRateSpinBox.value()
+        self.parameters.learning_rate = self.baseLearningRateSpinBox.value()
         self.parameters.resnetDepth = str(self.resnetDepthComboBox.currentText())
         self.parameters.earlyStopping = self.earlyStoppingCheckBox.isChecked()
         self.parameters.patience = self.patienceSpinBox.value()
         self.parameters.expertModecfg= self.qbrowse_widget.qedit_file.text()
+        self.parameters.numGPU = self.numGPUSpinBox.value()
 
         # Send signal to launch the process
         self.emitApply(self.parameters)

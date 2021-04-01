@@ -8,7 +8,7 @@ from detectron2.config import get_cfg, CfgNode
 import os
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.engine import launch
-
+import torch
 # Your imports below
 
 # --------------------
@@ -27,11 +27,11 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         self.warmupIters = 200
         self.polyLRFactor = 0.9
         self.polyLRConstantFactor = 0.0
-        self.batchSize = 4
+        self.batch_size = 4
         self.resnetDepth = 50
         self.batchNorm = "BN"
         self.ignoreValue = None
-        self.baseLearningRate = 0.02
+        self.learning_rate = 0.02
         self.trainer= None
         self.weights= None
         self.expertModecfg = ""
@@ -39,20 +39,22 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         self.earlyStopping = False
         self.patience = 10
         self.splitTrainTest = 90
+        self.numGPU = 1
 
     def setParamMap(self, paramMap):
         # Set parameters values from Ikomia application
         # Parameters values are stored as string and accessible like a python dict
         self.inputSize = tuple([int(u) for u in paramMap["inputSize"].split(' ') ])
         self.maxIter = int(paramMap["maxIter"])
-        self.batchSize = int(paramMap["batchSize"])
+        self.batch_size = int(paramMap["batchSize"])
         self.resnetDepth = int(paramMap["resnetDepth"])
         self.expertModecfg = paramMap["expertModecfg"]
         self.evalPeriod = int(paramMap["evalPeriod"])
         self.earlyStopping = bool(paramMap["earlyStopping"])
         self.patience = int(paramMap["patience"])
         self.splitTrainTest = float(paramMap["splitTrainTest"])
-        pass
+        self.numGPU = int(paramMap["numGPU"])
+        self.learning_rate = float(paramMap["learning_rate"])
 
 
     def getParamMap(self):
@@ -61,13 +63,15 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         paramMap = core.ParamMap()
         paramMap["inputSize"] =str(self.inputSize[0])+" "+str(self.inputSize[1])
         paramMap["maxIter"] = str(self.maxIter)
-        paramMap["batchSize"] = str(self.batchSize)
+        paramMap["batchSize"] = str(self.batch_size)
         paramMap["resnetDepth"] = str(self.resnetDepth)
         paramMap["expertModecfg"] = self.expertModecfg
         paramMap["evalPeriod"] = str(self.evalPeriod)
         paramMap["earlyStopping"]=str(self.earlyStopping)
         paramMap["patience"]=str(self.patience)
         paramMap["splitTrainTest"]=str(self.splitTrainTest)
+        paramMap["numGPU"] = str(self.numGPU)
+        paramMap["learning_rate"] = str(self.learning_rate)
         return paramMap
 
 
@@ -94,16 +98,20 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 
     def run(self):
         # Core function of your process
-        # Call beginTaskRun for initialization
-        self.beginTaskRun()
-        # Examples :
-        # Get input :
         input = self.getInput(0)
 
         # Get parameters :
         param = self.getParam()
 
         if len(input.data["images"])>0:
+
+            param.epochs = int(param.maxIter / param.batch_size / len(input.data["images"]))
+            param.classes = len(input.data["metadata"]["category_names"])
+            param.model_name = "DeepLabV3Plus"
+            # Call beginTaskRun for initialization
+            self.beginTaskRun()
+            self.log_param("Input size",str(param.inputSize))
+
             if param.expertModecfg == "":
                 # Get default config
                 cfg = get_cfg()
@@ -120,11 +128,11 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 cfg.SOLVER.WARMUP_ITERS = param.maxIter//5
                 cfg.SOLVER.POLY_LR_FACTOR = 0.9
                 cfg.SOLVER.POLY_LR_CONSTANT_FACTOR = 0.0
-                cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = len(input.data["metadata"]["category_names"])
-                cfg.SOLVER.BASE_LR = param.baseLearningRate
+                cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = param.classes
+                cfg.SOLVER.BASE_LR = param.learning_rate
                 cfg.MODEL.SEM_SEG_HEAD.ASPP_CHANNELS = 256
                 cfg.MODEL.SEM_SEG_HEAD.COMMON_STRIDE = 4
-                cfg.SOLVER.IMS_PER_BATCH=param.batchSize
+                cfg.SOLVER.IMS_PER_BATCH=param.batch_size
                 cfg.DATALOADER.NUM_WORKERS = 0
                 cfg.INPUT_SIZE=param.inputSize
                 cfg.TEST.EVAL_PERIOD = param.evalPeriod
@@ -149,9 +157,15 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 
                 self.trainer = deeplabutils.MyTrainer(cfg,self)
                 self.trainer.resume_or_load(resume=False)
+                nb_epochs = int(cfg.SOLVER.MAX_ITER/len(input.data["images"])/cfg.SOLVER.IMS_PER_BATCH)
+                #self.log_param("Batch size",str(cfg.SOLVER.IMS_PER_BATCH))
+                #self.log_params({,"Epochs":str(nb_epochs),"Classes":str(len(input.data["metadata"]["category_names"]))})
                 print("Starting training job...")
                 launch(self.trainer.train,num_gpus_per_machine=1)
                 print("Training job finished.")
+                print("Saving model pth...")
+                self.trainer.checkpointer.save("model_final")
+                print("Model saved")
                 with open(cfg.OUTPUT_DIR+"/Detectron2_DeepLabV3Plus_Train_Config.yaml", 'w') as file:
                     file.write(cfg.dump())
             else :
