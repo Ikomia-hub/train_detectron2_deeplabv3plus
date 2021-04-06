@@ -114,7 +114,7 @@ class LossEvalHook(HookBase):
         self.trainer.storage.put_scalar('validation_loss', mean_loss)
 
         metrics_dict = {k:v[0] for k,v in self.trainer.storage.latest().items()}
-        self.train_process.log_metrics(metrics_dict,self.trainer.storage.latest()["time"][1] )
+        self.train_process.log_metrics(metrics_dict, self.trainer.iter)
 
         if self.waiting>self.patience and self.patience>=0:
             self.trainer.run=False
@@ -136,7 +136,6 @@ class LossEvalHook(HookBase):
         is_final = next_iter == self.trainer.max_iter
         if is_final or (self._period > 0 and next_iter % self._period == 0):
             self._do_loss_eval()
-        self.trainer.storage.put_scalars(timetest=12)
 
 class MyTrainer(DefaultTrainer):
     def __init__(self, cfg, train_process):
