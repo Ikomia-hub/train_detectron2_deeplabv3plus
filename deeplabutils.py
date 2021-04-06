@@ -3,8 +3,6 @@ import numpy as np
 from detectron2.engine import DefaultTrainer
 import torch
 from detectron2.projects.deeplab.build_solver import build_lr_scheduler as build_deeplab_lr_scheduler
-import logging
-
 import detectron2.data.transforms as T
 from detectron2.data import DatasetMapper
 from detectron2.data import build_detection_train_loader, build_detection_test_loader
@@ -223,13 +221,13 @@ class MySemSegEvaluator(SemSegEvaluator):
                 segmentation prediction in the same format.
         """
         for input, output in zip(inputs, outputs):
-            output = output["sem_seg"].argmax(dim=0).to(self._cpu_device)
+            output =output["sem_seg"].argmax(dim=0).to(self._cpu_device)
             pred = np.array(output, dtype=int)
             with PathManager.open(self.input_file_to_gt_file[input["file_name"]], "rb") as f:
                 gt = np.array(Image.open(f), dtype=int)
                 if "category_colors" in input:
-                    inv_labelmap= {c: i for i,c in enumerate(input["category_colors"])}
-                    gt = rgb2mask(gt,inv_labelmap).astype(dtype=np.uint8)
+                    gt = rgb2mask(gt, input["category_colors"]).astype(dtype=np.uint8)
+
 
             gt[gt == self._ignore_label] = self._num_classes
 
