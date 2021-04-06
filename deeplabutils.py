@@ -23,6 +23,9 @@ import time
 import datetime
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import random
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 def my_dataset_function(ikDataset):
     #returns a function that returns a list[dict] to be used as detectron2 dataset
@@ -60,8 +63,6 @@ def rgb2mask(img, color2index):
             mask[img_id == c] = color2index[tuple(img[img_id == c][0])]
         except:
             pass
-    np.unique(mask)
-    np.unique(img.reshape(-1, img.shape[2]), axis=0)
 
     return mask
 
@@ -157,7 +158,7 @@ class MyTrainer(DefaultTrainer):
         return build_detection_train_loader(cfg, mapper=MyMapper(True, augmentations=[T.Resize(cfg.INPUT_SIZE)], image_format="RGB"))
 
     def build_evaluator(cfg, dataset_name):
-        return MySemSegEvaluator(dataset_name, distributed=False, output_dir="eval", num_classes=3)
+        return MySemSegEvaluator(dataset_name, distributed=False, output_dir="eval", num_classes=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES )
 
     def build_hooks(self):
         hooks = super().build_hooks()
@@ -227,7 +228,8 @@ class MySemSegEvaluator(SemSegEvaluator):
             with PathManager.open(self.input_file_to_gt_file[input["file_name"]], "rb") as f:
                 gt = np.array(Image.open(f), dtype=int)
                 if "category_colors" in input:
-                    gt = rgb2mask(gt,input["category_colors"]).astype(dtype=np.uint8)
+                    inv_labelmap= {c: i for i,c in enumerate(input["category_colors"])}
+                    gt = rgb2mask(gt,inv_labelmap).astype(dtype=np.uint8)
 
             gt[gt == self._ignore_label] = self._num_classes
 
@@ -268,12 +270,12 @@ class MyMapper(DatasetMapper):
         if "sem_seg_file_name" in dataset_dict:
             if "category_colors" in dataset_dict:
                 sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name"), "RGB")
-
                 sem_seg_gt = rgb2mask(sem_seg_gt, dataset_dict["category_colors"])
 
             else:
                 sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name"), "L")
                 sem_seg_gt = sem_seg_gt.squeeze(2)
+
 
         else:
             sem_seg_gt = None

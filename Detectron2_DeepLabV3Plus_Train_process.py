@@ -137,7 +137,7 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 cfg.INPUT_SIZE=param.inputSize
                 cfg.TEST.EVAL_PERIOD = param.evalPeriod
                 cfg.SPLIT_TRAIN_TEST = param.splitTrainTest
-                cfg.SPLIT_TRAIN_TEST_SEED = None
+                cfg.SPLIT_TRAIN_TEST_SEED = -1
                 cfg.MODEL.BACKBONE.FREEZE_AT=5
                 if param.earlyStopping:
                     cfg.PATIENCE = param.patience
@@ -157,9 +157,6 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 
                 self.trainer = deeplabutils.MyTrainer(cfg,self)
                 self.trainer.resume_or_load(resume=False)
-                nb_epochs = int(cfg.SOLVER.MAX_ITER/len(input.data["images"])/cfg.SOLVER.IMS_PER_BATCH)
-                #self.log_param("Batch size",str(cfg.SOLVER.IMS_PER_BATCH))
-                #self.log_params({,"Epochs":str(nb_epochs),"Classes":str(len(input.data["metadata"]["category_names"]))})
                 print("Starting training job...")
                 launch(self.trainer.train,num_gpus_per_machine=1)
                 print("Training job finished.")
