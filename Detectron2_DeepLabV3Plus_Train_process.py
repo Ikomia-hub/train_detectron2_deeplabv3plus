@@ -109,8 +109,10 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
             param.epochs = int(param.maxIter * param.batch_size / len(input.data["images"]))
 
             if input.has_bckgnd_class==False:
-                input.data["metadata"]["category_names"]={k+1:v for k,v in input.data["metadata"]["category_names"].items() }
-                input.data["metadata"]["category_names"][0] = "background"
+                tmp_dict = {0: "background"}
+                for k, name in input.data["metadata"]["category_names"].items():
+                    tmp_dict[k + 1] = name
+                input.data["metadata"]["category_names"] = tmp_dict
 
             param.classes = len(input.data["metadata"]["category_names"])
 
