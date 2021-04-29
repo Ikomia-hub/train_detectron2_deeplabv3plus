@@ -123,6 +123,12 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.gridLayout.addWidget(self.numGPUQLabel,10,0,1,1)
         self.gridLayout.addWidget(self.numGPUSpinBox,10,1,1,2)
 
+        # Output folder
+        self.browse_out_folder = utils.append_browse_file(self.gridLayout, label="Output folder",
+                                                          path=self.parameters.output_folder,
+                                                          tooltip="Select folder",
+                                                          mode=QFileDialog.Directory)
+
         self.setLayout(layout_ptr)
 
     def showPatienceSpinBox(self):
@@ -154,6 +160,7 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.parameters.patience = self.patienceSpinBox.value()
         self.parameters.expertModecfg= self.qbrowse_widget.qedit_file.text()
         self.parameters.numGPU = self.numGPUSpinBox.value()
+        self.parameters.output_folder = self.browse_out_folder.path
 
         # Send signal to launch the process
         self.emitApply(self.parameters)

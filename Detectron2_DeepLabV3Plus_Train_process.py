@@ -8,6 +8,7 @@ from detectron2.config import get_cfg, CfgNode
 import os
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.engine import launch
+from datetime import datetime
 import torch
 # Your imports below
 
@@ -40,6 +41,7 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         self.patience = 10
         self.splitTrainTest = 90
         self.numGPU = 1
+        self.output_folder = ""
 
     def setParamMap(self, paramMap):
         # Set parameters values from Ikomia application
@@ -55,6 +57,7 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         self.splitTrainTest = float(paramMap["splitTrainTest"])
         self.numGPU = int(paramMap["numGPU"])
         self.learning_rate = float(paramMap["learning_rate"])
+        self.output_folder = paramMap["output_folder"]
 
 
     def getParamMap(self):
@@ -72,6 +75,7 @@ class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
         paramMap["splitTrainTest"]=str(self.splitTrainTest)
         paramMap["numGPU"] = str(self.numGPU)
         paramMap["learning_rate"] = str(self.learning_rate)
+        paramMap["output_folder"] = self.output_folder
         return paramMap
 
 
@@ -153,7 +157,10 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 else:
                     cfg.PATIENCE = -1
 
-                cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__))+"/output"
+                if param.output_folder == "":
+                    cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__))+"/output"
+                elif os.path.isdir(param.output_folder):
+                    cfg.OUTPUT_DIR = param.output_folder
             else:
                 cfg = None
                 with open(param.expertModecfg, 'r') as file:
@@ -163,6 +170,14 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 deeplabutils.register_train_test(input.data["images"],input.data["metadata"],train_ratio=cfg.SPLIT_TRAIN_TEST/100,seed=cfg.SPLIT_TRAIN_TEST_SEED)
 
                 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+
+                str_datetime = datetime.now().strftime("%d-%m-%YT%Hh%Mm%Ss")
+                model_folder = param.output_folder +os.path.sep +str_datetime
+
+                if not os.path.isdir(model_folder):
+                    os.mkdir(model_folder)
+
+                cfg.OUTPUT_DIR = model_folder
 
                 self.trainer = deeplabutils.MyTrainer(cfg,self)
                 self.trainer.resume_or_load(resume=False)
