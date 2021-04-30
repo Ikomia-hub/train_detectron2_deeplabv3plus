@@ -152,6 +152,7 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 cfg.SPLIT_TRAIN_TEST = param.splitTrainTest
                 cfg.SPLIT_TRAIN_TEST_SEED = -1
                 cfg.MODEL.BACKBONE.FREEZE_AT=5
+                cfg.CLASS_NAMES = [name for k,name in input.data["metadata"]["category_names"].items()]
                 if param.earlyStopping:
                     cfg.PATIENCE = param.patience
                 else:
