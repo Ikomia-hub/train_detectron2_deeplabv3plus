@@ -42,6 +42,29 @@ class Detectron2_DeepLabV3Plus_TrainParam(dnntrain.TrainParam):
         self.cfg["numGPU"] = 1
         self.cfg["outputFolder"] = ""
 
+    def setParamMap(self, param_map):
+        self.cfg["modelName"] = param_map["modelName"]
+        self.cfg["inputWidth"] = int(param_map["inputWidth"])
+        self.cfg["inputHeight"] = int(param_map["inputHeight"])
+        self.cfg["epochs"] = int(param_map["epochs"])
+        self.cfg["classes"] = int(param_map["classes"])
+        self.cfg["maxIter"] = int(param_map["maxIter"])
+        self.cfg["warmupFactor"] = float(param_map["warmupFactor"])
+        self.cfg["warmupIters"] = int(param_map["warmupIters"])
+        self.cfg["polyLRFactor"] = float(param_map["polyLRFactor"])
+        self.cfg["polyLRConstantFactor"] = float(param_map["polyLRConstantFactor"])
+        self.cfg["batchSize"] = int(param_map["batchSize"])
+        self.cfg["resnetDepth"] = int(param_map["resnetDepth"])
+        self.cfg["batchNorm"] = param_map["batchNorm"]
+        self.cfg["learningRate"] = float(param_map["learningRate"])
+        self.cfg["expertModeCfg"] = param_map["expertModeCfg"]
+        self.cfg["evalPeriod"] = int(param_map["evalPeriod"])
+        self.cfg["earlyStopping"] = bool(param_map["earlyStopping"])
+        self.cfg["patience"] = int(param_map["patience"])
+        self.cfg["splitTrainTest"] = int(param_map["splitTrainTest"])
+        self.cfg["numGPU"] = int(param_map["numGPU"])
+        self.cfg["output_folder"] = param_map["output_folder"]
+
 
 # --------------------
 # - Class which implements the process
