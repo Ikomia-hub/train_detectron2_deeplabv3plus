@@ -1,82 +1,46 @@
 import update_path
 from ikomia import core, dataprocess
 import copy
-from ikomia.dnn import datasetio
-from ikomia.dnn import dnntrain
+from ikomia.dnn import datasetio, dnntrain
 import deeplabutils
 from detectron2.config import get_cfg, CfgNode
 import os
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.engine import launch
 from datetime import datetime
-import torch
-# Your imports below
+
 
 # --------------------
 # - Class to handle the process parameters
 # - Inherits PyCore.CProtocolTaskParam from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
+class Detectron2_DeepLabV3Plus_TrainParam(dnntrain.TrainParam):
 
     def __init__(self):
-        dataprocess.CDnnTrainProcessParam.__init__(self)
+        dnntrain.TrainParam.__init__(self)
         # Place default value initialization here
-        self.inputSize=(800,800)
-        self.numClasses=2
-        self.maxIter = 1000
-        self.warmupFactor = 0.001
-        self.warmupIters = 200
-        self.polyLRFactor = 0.9
-        self.polyLRConstantFactor = 0.0
-        self.batch_size = 4
-        self.resnetDepth = 50
-        self.batchNorm = "BN"
-        self.ignoreValue = None
-        self.learning_rate = 0.02
-        self.trainer= None
-        self.weights= None
-        self.expertModecfg = ""
-        self.evalPeriod = 100
-        self.earlyStopping = False
-        self.patience = 10
-        self.splitTrainTest = 90
-        self.numGPU = 1
-        self.output_folder = ""
-
-    def setParamMap(self, paramMap):
-        # Set parameters values from Ikomia application
-        # Parameters values are stored as string and accessible like a python dict
-        self.inputSize = tuple([int(u) for u in paramMap["inputSize"].split(' ') ])
-        self.maxIter = int(paramMap["maxIter"])
-        self.batch_size = int(paramMap["batchSize"])
-        self.resnetDepth = int(paramMap["resnetDepth"])
-        self.expertModecfg = paramMap["expertModecfg"]
-        self.evalPeriod = int(paramMap["evalPeriod"])
-        self.earlyStopping = bool(paramMap["earlyStopping"])
-        self.patience = int(paramMap["patience"])
-        self.splitTrainTest = float(paramMap["splitTrainTest"])
-        self.numGPU = int(paramMap["numGPU"])
-        self.learning_rate = float(paramMap["learning_rate"])
-        self.output_folder = paramMap["output_folder"]
-
-
-    def getParamMap(self):
-        # Send parameters values to Ikomia application
-        # Create the specific dict structure (string container)
-        paramMap = core.ParamMap()
-        paramMap["inputSize"] =str(self.inputSize[0])+" "+str(self.inputSize[1])
-        paramMap["maxIter"] = str(self.maxIter)
-        paramMap["batchSize"] = str(self.batch_size)
-        paramMap["resnetDepth"] = str(self.resnetDepth)
-        paramMap["expertModecfg"] = self.expertModecfg
-        paramMap["evalPeriod"] = str(self.evalPeriod)
-        paramMap["earlyStopping"]=str(self.earlyStopping)
-        paramMap["patience"]=str(self.patience)
-        paramMap["splitTrainTest"]=str(self.splitTrainTest)
-        paramMap["numGPU"] = str(self.numGPU)
-        paramMap["learning_rate"] = str(self.learning_rate)
-        paramMap["output_folder"] = self.output_folder
-        return paramMap
+        self.cfg["modelName"] = "DeepLabV3Plus"
+        self.cfg["inputWidth"] = 800
+        self.cfg["inputHeight"] = 800
+        self.cfg["epochs"] = 1000
+        self.cfg["classes"] = 2
+        self.cfg["maxIter"] = 1000
+        self.cfg["warmupFactor"] = 0.001
+        self.cfg["warmupIters"] = 200
+        self.cfg["polyLRFactor"] = 0.9
+        self.cfg["polyLRConstantFactor"] = 0.0
+        self.cfg["batchSize"] = 4
+        self.cfg["resnetDepth"] = 50
+        self.cfg["batchNorm"] = "BN"
+        self.cfg["ignoreValue"] = None
+        self.cfg["learningRate"] = 0.02
+        self.cfg["expertModeCfg"] = ""
+        self.cfg["evalPeriod"] = 100
+        self.cfg["earlyStopping"] = False
+        self.cfg["patience"] = 10
+        self.cfg["splitTrainTest"] = 90
+        self.cfg["numGPU"] = 1
+        self.cfg["outputFolder"] = ""
 
 
 # --------------------
@@ -88,12 +52,16 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
     def __init__(self, name, param):
         dnntrain.TrainProcess.__init__(self, name, param)
         # Add input/output of the process here
-        self.addInput(datasetio.IkDatasetIO(dataprocess.DatasetFormat.OTHER))
+        self.addInput(datasetio.IkDatasetIO("other"))
+
         # Create parameters class
         if param is None:
             self.setParam(Detectron2_DeepLabV3Plus_TrainParam())
         else:
             self.setParam(copy.deepcopy(param))
+
+        self.trainer = None
+        self.enableTensorboard(False)
 
     def getProgressSteps(self, eltCount=1):
         # Function returning the number of progress steps for this process
@@ -102,88 +70,86 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 
     def run(self):
         # Core function of your process
-
         input = self.getInput(0)
-
         # Get parameters :
         param = self.getParam()
 
-        if len(input.data["images"])>0:
+        if len(input.data["images"]) > 0:
+            param.cfg["epochs"] = int(param.cfg["maxIter"] * param.cfg["batchSize"] / len(input.data["images"]))
 
-            param.epochs = int(param.maxIter * param.batch_size / len(input.data["images"]))
-
-            if input.has_bckgnd_class==False:
+            if input.has_bckgnd_class == False:
                 tmp_dict = {0: "background"}
                 for k, name in input.data["metadata"]["category_names"].items():
                     tmp_dict[k + 1] = name
                 input.data["metadata"]["category_names"] = tmp_dict
 
-            param.classes = len(input.data["metadata"]["category_names"])
+            param.cfg["classes"] = len(input.data["metadata"]["category_names"])
 
-            param.model_name = "DeepLabV3Plus"
             # Call beginTaskRun for initialization
             self.beginTaskRun()
-            self.log_param("Input size",str(param.inputSize))
 
-            if param.expertModecfg == "":
+            if param.cfg["expertModeCfg"] == "":
                 # Get default config
                 cfg = get_cfg()
 
                 # Add specific deeplab config
                 add_deeplab_config(cfg)
-                cfg.merge_from_file(os.path.dirname(os.path.realpath(__file__))+"/model/configs/deeplab_v3_plus_R_103_os16_mg124_poly_90k_bs16.yaml")
+                cfg.merge_from_file(os.path.dirname(os.path.realpath(__file__)) + "/model/configs/deeplab_v3_plus_R_103_os16_mg124_poly_90k_bs16.yaml")
 
                 # Generic dataset names that will be used
                 cfg.DATASETS.TRAIN = ("datasetTrain",)
                 cfg.DATASETS.TEST = ("datasetTest",)
-                cfg.SOLVER.MAX_ITER = param.maxIter
+                cfg.SOLVER.MAX_ITER = param.cfg["maxIter"]
                 cfg.SOLVER.WARMUP_FACTOR = 0.001
-                cfg.SOLVER.WARMUP_ITERS = param.maxIter//5
+                cfg.SOLVER.WARMUP_ITERS = param.cfg["maxIter"]//5
                 cfg.SOLVER.POLY_LR_FACTOR = 0.9
                 cfg.SOLVER.POLY_LR_CONSTANT_FACTOR = 0.0
-                cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = param.classes
-                cfg.SOLVER.BASE_LR = param.learning_rate
+                cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = param.cfg["classes"]
+                cfg.SOLVER.BASE_LR = param.cfg["learningRate"]
                 cfg.MODEL.SEM_SEG_HEAD.ASPP_CHANNELS = 256
                 cfg.MODEL.SEM_SEG_HEAD.COMMON_STRIDE = 4
-                cfg.SOLVER.IMS_PER_BATCH=param.batch_size
+                cfg.SOLVER.IMS_PER_BATCH = param.cfg["batchSize"]
                 cfg.DATALOADER.NUM_WORKERS = 0
-                cfg.INPUT_SIZE=param.inputSize
-                cfg.TEST.EVAL_PERIOD = param.evalPeriod
-                cfg.SPLIT_TRAIN_TEST = param.splitTrainTest
+                cfg.INPUT_SIZE = (param.cfg["inputWidth"], param.cfg["inputHeight"])
+                cfg.TEST.EVAL_PERIOD = param.cfg["evalPeriod"]
+                cfg.SPLIT_TRAIN_TEST = param.cfg["splitTrainTest"]
                 cfg.SPLIT_TRAIN_TEST_SEED = -1
-                cfg.MODEL.BACKBONE.FREEZE_AT=5
-                cfg.CLASS_NAMES = [name for k,name in input.data["metadata"]["category_names"].items()]
-                if param.earlyStopping:
-                    cfg.PATIENCE = param.patience
+                cfg.MODEL.BACKBONE.FREEZE_AT = 5
+                cfg.CLASS_NAMES = [name for k, name in input.data["metadata"]["category_names"].items()]
+
+                if param.cfg["earlyStopping"]:
+                    cfg.PATIENCE = param.cfg["patience"]
                 else:
                     cfg.PATIENCE = -1
 
-                if param.output_folder == "":
-                    cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__))+"/output"
-                elif os.path.isdir(param.output_folder):
-                    cfg.OUTPUT_DIR = param.output_folder
+                if param.cfg["outputFolder"] == "":
+                    cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__)) + "/output"
+                elif os.path.isdir(param.cfg["outputFolder"]):
+                    cfg.OUTPUT_DIR = param.cfg["outputFolder"]
             else:
                 cfg = None
-                with open(param.expertModecfg, 'r') as file:
+                with open(param.cfg["expertModeCfg"], 'r') as file:
                     cfg_data = file.read()
                     cfg = CfgNode.load_cfg(cfg_data)
+
             if cfg is not None:
-                deeplabutils.register_train_test(input.data["images"],input.data["metadata"],train_ratio=cfg.SPLIT_TRAIN_TEST/100,seed=cfg.SPLIT_TRAIN_TEST_SEED)
+                deeplabutils.register_train_test(input.data["images"], input.data["metadata"],
+                                                 train_ratio=cfg.SPLIT_TRAIN_TEST/100,
+                                                 seed=cfg.SPLIT_TRAIN_TEST_SEED)
 
                 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
                 str_datetime = datetime.now().strftime("%d-%m-%YT%Hh%Mm%Ss")
-                model_folder = param.output_folder +os.path.sep +str_datetime
+                model_folder = cfg.OUTPUT_DIR + os.path.sep + str_datetime
+                cfg.OUTPUT_DIR = model_folder
 
                 if not os.path.isdir(model_folder):
                     os.mkdir(model_folder)
 
-                cfg.OUTPUT_DIR = model_folder
-
-                self.trainer = deeplabutils.MyTrainer(cfg,self)
+                self.trainer = deeplabutils.MyTrainer(cfg, self)
                 self.trainer.resume_or_load(resume=False)
                 print("Starting training job...")
-                launch(self.trainer.train,num_gpus_per_machine=1)
+                launch(self.trainer.train, num_gpus_per_machine=1)
                 print("Training job finished.")
                 print("Saving model pth...")
                 self.trainer.checkpointer.save("model_final")
@@ -191,7 +157,8 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 with open(cfg.OUTPUT_DIR+"/Detectron2_DeepLabV3Plus_Train_Config.yaml", 'w') as file:
                     file.write(cfg.dump())
             else :
-                print("Error : can't load config file "+param.expertModecfg)
+                print("Error : can't load config file "+param.cfg["expertModeCfg"])
+
         # Call endTaskRun to finalize process
         self.endTaskRun()
 
@@ -200,13 +167,13 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
         # This is handled by the main progress bar of Ikomia application
         param = self.getParam()
         if param is not None:
-            return param.maxIter
+            return param.cfg["maxIter"]
         else:
             return 1
 
     def stop(self):
         super().stop()
-        self.trainer.run=False
+        self.trainer.run = False
 
 # --------------------
 # - Factory class to build process object
