@@ -95,10 +95,6 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
         else:
             self.setParam(copy.deepcopy(param))
 
-    def getProgressSteps(self, eltCount=1):
-        # Function returning the number of progress steps for this process
-        # This is handled by the main progress bar of Ikomia application
-        return 1
 
     def run(self):
         # Core function of your process
@@ -162,6 +158,8 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                     cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__))+"/output"
                 elif os.path.isdir(param.output_folder):
                     cfg.OUTPUT_DIR = param.output_folder
+                else :
+                    print("Incorrect output folder path")
             else:
                 cfg = None
                 with open(param.expertModecfg, 'r') as file:
