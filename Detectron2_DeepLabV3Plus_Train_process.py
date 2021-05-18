@@ -95,6 +95,8 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
         else:
             self.setParam(copy.deepcopy(param))
 
+        self.trainer = None
+        self.enableTensorboard(False)
 
     def run(self):
         # Core function of your process
@@ -154,10 +156,10 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 else:
                     cfg.PATIENCE = -1
 
-                if param.output_folder == "":
-                    cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__))+"/output"
-                elif os.path.isdir(param.output_folder):
-                    cfg.OUTPUT_DIR = param.output_folder
+                if param.cfg["outputFolder"] == "":
+                    cfg.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__)) + "/output"
+                elif os.path.isdir(param.cfg["outputFolder"]):
+                    cfg.OUTPUT_DIR = param.cfg["outputFolder"]
                 else :
                     print("Incorrect output folder path")
             else:
