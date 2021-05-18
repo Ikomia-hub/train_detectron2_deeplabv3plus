@@ -63,7 +63,7 @@ class Detectron2_DeepLabV3Plus_TrainParam(dnntrain.TrainParam):
         self.cfg["patience"] = int(param_map["patience"])
         self.cfg["splitTrainTest"] = int(param_map["splitTrainTest"])
         self.cfg["numGPU"] = int(param_map["numGPU"])
-        self.cfg["output_folder"] = param_map["output_folder"]
+        self.cfg["outputFolder"] = param_map["outputFolder"]
 
 
 # --------------------
