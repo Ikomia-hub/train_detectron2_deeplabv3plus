@@ -8,6 +8,8 @@ import os
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.engine import launch
 from datetime import datetime
+import torch
+import gc
 
 # --------------------
 # - Class to handle the process parameters
@@ -177,6 +179,9 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 print("Saving model pth...")
                 self.trainer.checkpointer.save("model_final")
                 print("Model saved")
+                self.trainer = None
+                gc.collect()
+                torch.cuda.empty_cache()
                 with open(cfg.OUTPUT_DIR+"/Detectron2_DeepLabV3Plus_Train_Config.yaml", 'w') as file:
                     file.write(cfg.dump())
             else:
