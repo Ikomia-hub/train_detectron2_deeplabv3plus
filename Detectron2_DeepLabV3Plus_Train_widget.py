@@ -85,15 +85,21 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.patienceSpinBox.setValue(self.parameters.cfg["patience"])
         self.patienceSpinBox.hide()
 
-        qlabel = QLabel("Advanced YAML config:")
-        self.qbrowse_widget = BrowseFileWidget(path=self.parameters.cfg["expertModeCfg"],
+        yaml_label = QLabel("Advanced YAML config:")
+        self.yaml_browse_widget = BrowseFileWidget(path=self.parameters.cfg["expertModeCfg"],
                                                mode=QFileDialog.ExistingFile)
 
         self.numGPUQLabel = QLabel("Number of GPU:")
         self.numGPUSpinBox = QSpinBox()
-        self.numGPUSpinBox.setRange(1,16)
+        self.numGPUSpinBox.setRange(1, 16)
         self.numGPUSpinBox.setSingleStep(1)
         self.numGPUSpinBox.setValue(self.parameters.cfg["numGPU"])
+
+        # Output folder
+        output_label = QLabel("Output folder:")
+        self.output_browse_widget = BrowseFileWidget(path=self.parameters.cfg["outputFolder"],
+                                                     tooltip="Select folder",
+                                                     mode=QFileDialog.Directory)
 
         # Set widget layout
         self.gridLayout.addWidget(inputSizeLabel, 0, 0, 1, 1)
@@ -110,22 +116,17 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.gridLayout.addWidget(baseLearningRateLabel, 5, 0, 1, 1)
         self.gridLayout.addWidget(self.baseLearningRateSpinBox, 5, 1, 1, 2)
         self.gridLayout.addWidget(resnetDepthLabel, 6, 0, 1, 2)
-        self.gridLayout.addWidget(self.resnetDepthComboBox, 6, 1, 1, 1)
+        self.gridLayout.addWidget(self.resnetDepthComboBox, 6, 1, 1, 2)
         self.gridLayout.addWidget(earlyStoppingLabel, 7, 0, 1, 1)
         self.gridLayout.addWidget(self.earlyStoppingCheckBox, 7, 1, 1, 2)
         self.gridLayout.addWidget(self.patienceLabel, 8, 0, 1, 1)
         self.gridLayout.addWidget(self.patienceSpinBox, 8, 1, 1, 2)
-        self.gridLayout.addWidget(qlabel, 9, 0, 1, 1)
-        self.gridLayout.addWidget(self.qbrowse_widget, 9, 1, 1, 2)
+        self.gridLayout.addWidget(yaml_label, 9, 0, 1, 1)
+        self.gridLayout.addWidget(self.yaml_browse_widget, 9, 1, 1, 2)
         self.gridLayout.addWidget(self.numGPUQLabel, 10, 0, 1, 1)
         self.gridLayout.addWidget(self.numGPUSpinBox, 10, 1, 1, 2)
-
-        # Output folder
-        self.browse_out_folder = utils.append_browse_file(self.gridLayout, label="Output folder",
-                                                          path=self.parameters.cfg["outputFolder"],
-                                                          tooltip="Select folder",
-                                                          mode=QFileDialog.Directory)
-
+        self.gridLayout.addWidget(output_label, 11, 0, 1, 1)
+        self.gridLayout.addWidget(self.output_browse_widget, 11, 1, 1, 2)
         self.setLayout(layout_ptr)
 
     def showPatienceSpinBox(self):
@@ -156,9 +157,9 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
         self.parameters.cfg["resnetDepth"] = str(self.resnetDepthComboBox.currentText())
         self.parameters.cfg["earlyStopping"] = self.earlyStoppingCheckBox.isChecked()
         self.parameters.cfg["patience"] = self.patienceSpinBox.value()
-        self.parameters.cfg["expertModeCfg"] = self.qbrowse_widget.qedit_file.text()
+        self.parameters.cfg["expertModeCfg"] = self.yaml_browse_widget.path
         self.parameters.cfg["numGPU"] = self.numGPUSpinBox.value()
-        self.parameters.cfg["outputFolder"] = self.browse_out_folder.path
+        self.parameters.cfg["outputFolder"] = self.output_browse_widget.path
 
         # Send signal to launch the process
         self.emitApply(self.parameters)
