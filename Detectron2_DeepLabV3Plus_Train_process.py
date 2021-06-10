@@ -210,14 +210,22 @@ class Detectron2_DeepLabV3Plus_TrainProcessFactory(dataprocess.CProcessFactory):
         self.info.name = "Detectron2_DeepLabV3Plus_Train"
         self.info.shortDescription = "Training process for DeepLabv3+ model of Detectron2."
         self.info.description = "Implementation from Detectron2 (Facebook Research). " \
-                                "This Ikomia plugin can train model from " \
-                                "a given config file and a weight file produced by the Ikomia " \
-                                "plugin Detectron2_DeepLabV3Plus_Train."
+                                "This Ikomia plugin can train DeepLabV3+ model for semantic segmentation. " \
+                                "Most common parameters are exposed in the settings window. For expert usage, " \
+                                "it is also possible to select a custom configuration file." \
+                                "To start your training:" \
+                                "create a new workflow, " \
+                                "add a task node loading your dataset in Ikomia format " \
+                                "(consult the marketplace to check if a suitable dataset loader already exists), " \
+                                "add this DeepLabV3+ train task, " \
+                                "adjust parameters, " \
+                                "and click apply to start the training. " \
+                                "You are able to monitor your training runs through the MLflow dashboard."
         self.info.authors = "Liang-Chieh Chen, Yukun Zhu, George Papandreou, Florian Schroff, Hartwig Adam"
         # relative path -> as displayed in Ikomia application process tree
-        self.info.path = "Plugins/Python"
+        self.info.path = "Plugins/Python/Train"
         self.info.version = "1.0.0"
-        # self.info.iconPath = "your path to a specific icon"
+        self.info.iconPath = "icons/detectron2.png"
         self.info.article = "Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation"
         self.info.journal = "ECCV 2018"
         self.info.year = 2018
