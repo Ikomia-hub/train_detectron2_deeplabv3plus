@@ -178,9 +178,6 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 print("Starting training job...")
                 launch(self.trainer.train, num_gpus_per_machine=1)
                 print("Training job finished.")
-                print("Saving model pth...")
-                self.trainer.checkpointer.save("model_final")
-                print("Model saved")
                 self.trainer = None
                 gc.collect()
                 torch.cuda.empty_cache()

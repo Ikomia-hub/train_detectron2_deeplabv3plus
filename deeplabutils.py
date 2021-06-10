@@ -110,9 +110,13 @@ class LossEvalHook(HookBase):
             loss_batch = self._get_loss(inputs)
             losses.append(loss_batch)
         mean_loss = np.mean(losses)
-        if mean_loss<self.best_val_loss:
+        tol = 1e10-4
+        if mean_loss<self.best_val_loss+tol:
             self.best_val_loss=mean_loss
             self.waiting=0
+            print("Saving best model...")
+            self.trainer.checkpointer.save("best_model")
+            print("Model saved")
         self.waiting+=1
 
         self.trainer.storage.put_scalar('validation_loss', mean_loss)
