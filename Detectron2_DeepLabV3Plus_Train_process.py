@@ -8,6 +8,8 @@ import os
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.engine import launch
 from datetime import datetime
+import torch
+import gc
 
 # --------------------
 # - Class to handle the process parameters
@@ -96,11 +98,13 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
         if len(input.data["images"]) > 0:
             param.cfg["epochs"] = int(param.cfg["maxIter"] * param.cfg["batchSize"] / len(input.data["images"]))
 
-            if input.has_bckgnd_class == False:
+            # complete class names if input dataset has no background class
+            if not (input.has_bckgnd_class):
                 tmp_dict = {0: "background"}
                 for k, name in input.data["metadata"]["category_names"].items():
                     tmp_dict[k + 1] = name
                 input.data["metadata"]["category_names"] = tmp_dict
+                input.has_bckgnd_class = True
 
             param.cfg["classes"] = len(input.data["metadata"]["category_names"])
 
@@ -174,9 +178,9 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
                 print("Starting training job...")
                 launch(self.trainer.train, num_gpus_per_machine=1)
                 print("Training job finished.")
-                print("Saving model pth...")
-                self.trainer.checkpointer.save("model_final")
-                print("Model saved")
+                self.trainer = None
+                gc.collect()
+                torch.cuda.empty_cache()
                 with open(cfg.OUTPUT_DIR+"/Detectron2_DeepLabV3Plus_Train_Config.yaml", 'w') as file:
                     file.write(cfg.dump())
             else:
