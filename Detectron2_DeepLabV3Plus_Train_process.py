@@ -1,10 +1,10 @@
-import update_path
-from ikomia import core, dataprocess
 import copy
-from ikomia.dnn import datasetio, dnntrain
-import deeplabutils
-from detectron2.config import get_cfg, CfgNode
 import os
+from Detectron2_DeepLabV3Plus_Train import update_path, deeplabutils
+from ikomia import core, dataprocess
+from ikomia.dnn import datasetio, dnntrain
+from ikomia.core.task import TaskParam
+from detectron2.config import get_cfg, CfgNode
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.engine import launch
 from datetime import datetime
@@ -15,10 +15,10 @@ import gc
 # - Class to handle the process parameters
 # - Inherits PyCore.CProtocolTaskParam from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainParam(dataprocess.CDnnTrainProcessParam):
+class Detectron2_DeepLabV3Plus_TrainParam(TaskParam):
 
     def __init__(self):
-        dnntrain.TrainParam.__init__(self)
+        TaskParam.__init__(self)
         # Place default value initialization here
         self.cfg["modelName"] = "DeepLabV3Plus"
         self.cfg["inputWidth"] = 800
@@ -206,10 +206,10 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 # - Factory class to build process object
 # - Inherits PyDataProcess.CProcessFactory from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainProcessFactory(dataprocess.CProcessFactory):
+class Detectron2_DeepLabV3Plus_TrainProcessFactory(dataprocess.CTaskFactory):
 
     def __init__(self):
-        dataprocess.CProcessFactory.__init__(self)
+        dataprocess.CTaskFactory.__init__(self)
         # Set process information as string here
         self.info.name = "Detectron2_DeepLabV3Plus_Train"
         self.info.shortDescription = "Training process for DeepLabv3+ model of Detectron2."

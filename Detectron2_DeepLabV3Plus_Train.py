@@ -1,6 +1,4 @@
 from ikomia import dataprocess
-import Detectron2_DeepLabV3Plus_Train_process as processMod
-import Detectron2_DeepLabV3Plus_Train_widget as widgetMod
 
 
 # --------------------
@@ -13,9 +11,11 @@ class Detectron2_DeepLabV3Plus_Train(dataprocess.CPluginProcessInterface):
         dataprocess.CPluginProcessInterface.__init__(self)
 
     def getProcessFactory(self):
+        from Detectron2_DeepLabV3Plus_Train.Detectron2_DeepLabV3Plus_Train_process import Detectron2_DeepLabV3Plus_TrainProcessFactory
         # Instantiate process object
-        return processMod.Detectron2_DeepLabV3Plus_TrainProcessFactory()
+        return Detectron2_DeepLabV3Plus_TrainProcessFactory()
 
     def getWidgetFactory(self):
+        from Detectron2_DeepLabV3Plus_Train.Detectron2_DeepLabV3Plus_Train_widget import Detectron2_DeepLabV3Plus_TrainWidgetFactory
         # Instantiate associated widget object
-        return widgetMod.Detectron2_DeepLabV3Plus_TrainWidgetFactory()
+        return Detectron2_DeepLabV3Plus_TrainWidgetFactory()

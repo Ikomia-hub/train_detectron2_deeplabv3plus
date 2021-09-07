@@ -1,7 +1,8 @@
 from ikomia import utils, core, dataprocess
-import Detectron2_DeepLabV3Plus_Train_process as processMod
-#PyQt GUI framework
+from Detectron2_DeepLabV3Plus_Train.Detectron2_DeepLabV3Plus_Train_process import Detectron2_DeepLabV3Plus_TrainParam
+# PyQt GUI framework
 from PyQt5.QtWidgets import *
+from ikomia.utils import qtconversion
 from ikomia.utils.pyqtutils import BrowseFileWidget
 
 
@@ -9,20 +10,20 @@ from ikomia.utils.pyqtutils import BrowseFileWidget
 # - Class which implements widget associated with the process
 # - Inherits PyCore.CProtocolTaskWidget from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainWidget(core.CProtocolTaskWidget):
+class Detectron2_DeepLabV3Plus_TrainWidget(core.CWorkflowTaskWidget):
 
     def __init__(self, param, parent):
-        core.CProtocolTaskWidget.__init__(self, parent)
+        core.CWorkflowTaskWidget.__init__(self, parent)
 
         if param is None:
-            self.parameters = processMod.Detectron2_DeepLabV3Plus_TrainParam()
+            self.parameters = Detectron2_DeepLabV3Plus_TrainParam()
         else:
             self.parameters = param
 
         # Create layout : QGridLayout by default
         self.gridLayout = QGridLayout()
         # PyQt -> Qt wrapping
-        layout_ptr = utils.PyQtToQt(self.gridLayout)
+        layout_ptr = qtconversion.PyQtToQt(self.gridLayout)
 
         inputSizeLabel = QLabel("Desired input size:")
         self.widthSpinBox = QSpinBox()
