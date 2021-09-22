@@ -1,6 +1,6 @@
 import copy
 import os
-from Detectron2_DeepLabV3Plus_Train import update_path, deeplabutils
+from train_detectron2_deeplabv3plus import update_path, deeplabutils
 from ikomia import core, dataprocess
 from ikomia.dnn import datasetio, dnntrain
 from ikomia.core.task import TaskParam
@@ -15,7 +15,7 @@ import gc
 # - Class to handle the process parameters
 # - Inherits PyCore.CProtocolTaskParam from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainParam(TaskParam):
+class TrainDeeplabv3plusParam(TaskParam):
 
     def __init__(self):
         TaskParam.__init__(self)
@@ -73,7 +73,7 @@ class Detectron2_DeepLabV3Plus_TrainParam(TaskParam):
 # - Class which implements the process
 # - Inherits PyCore.CProtocolTask or derived from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
+class TrainDeeplabv3plus(dnntrain.TrainProcess):
 
     def __init__(self, name, param):
         dnntrain.TrainProcess.__init__(self, name, param)
@@ -82,7 +82,7 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 
         # Create parameters class
         if param is None:
-            self.setParam(Detectron2_DeepLabV3Plus_TrainParam())
+            self.setParam(TrainDeeplabv3plusParam())
         else:
             self.setParam(copy.deepcopy(param))
 
@@ -206,12 +206,12 @@ class Detectron2_DeepLabV3Plus_TrainProcess(dnntrain.TrainProcess):
 # - Factory class to build process object
 # - Inherits PyDataProcess.CProcessFactory from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainProcessFactory(dataprocess.CTaskFactory):
+class TrainDeeplabv3plusFactory(dataprocess.CTaskFactory):
 
     def __init__(self):
         dataprocess.CTaskFactory.__init__(self)
         # Set process information as string here
-        self.info.name = "Detectron2_DeepLabV3Plus_Train"
+        self.info.name = "train_detectron2_deeplabv3plus"
         self.info.shortDescription = "Training process for DeepLabv3+ model of Detectron2."
         self.info.description = "Implementation from Detectron2 (Facebook Research). " \
                                 "This Ikomia plugin can train DeepLabV3+ model for semantic segmentation. " \
@@ -243,4 +243,4 @@ class Detectron2_DeepLabV3Plus_TrainProcessFactory(dataprocess.CTaskFactory):
 
     def create(self, param=None):
         # Create process object
-        return Detectron2_DeepLabV3Plus_TrainProcess(self.info.name, param)
+        return TrainDeeplabv3plus(self.info.name, param)

@@ -1,5 +1,5 @@
 from ikomia import utils, core, dataprocess
-from Detectron2_DeepLabV3Plus_Train.Detectron2_DeepLabV3Plus_Train_process import Detectron2_DeepLabV3Plus_TrainParam
+from train_detectron2_deeplabv3plus.train_detectron2_deeplabv3plus_process import TrainDeeplabv3plusParam
 # PyQt GUI framework
 from PyQt5.QtWidgets import *
 from ikomia.utils import qtconversion
@@ -10,13 +10,13 @@ from ikomia.utils.pyqtutils import BrowseFileWidget
 # - Class which implements widget associated with the process
 # - Inherits PyCore.CProtocolTaskWidget from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainWidget(core.CWorkflowTaskWidget):
+class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
 
     def __init__(self, param, parent):
         core.CWorkflowTaskWidget.__init__(self, parent)
 
         if param is None:
-            self.parameters = Detectron2_DeepLabV3Plus_TrainParam()
+            self.parameters = TrainDeeplabv3plusParam()
         else:
             self.parameters = param
 
@@ -170,13 +170,13 @@ class Detectron2_DeepLabV3Plus_TrainWidget(core.CWorkflowTaskWidget):
 # - Factory class to build process widget object
 # - Inherits PyDataProcess.CWidgetFactory from Ikomia API
 # --------------------
-class Detectron2_DeepLabV3Plus_TrainWidgetFactory(dataprocess.CWidgetFactory):
+class TrainDeeplabv3plusWidgetFactory(dataprocess.CWidgetFactory):
 
     def __init__(self):
         dataprocess.CWidgetFactory.__init__(self)
         # Set the name of the process -> it must be the same as the one declared in the process factory class
-        self.name = "Detectron2_DeepLabV3Plus_Train"
+        self.name = "train_detectron2_deeplabv3plus"
 
     def create(self, param):
         # Create widget object
-        return Detectron2_DeepLabV3Plus_TrainWidget(param, None)
+        return TrainDeeplabv3plusWidget(param, None)
