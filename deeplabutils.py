@@ -22,34 +22,36 @@ import datetime
 from detectron2.data import MetadataCatalog, DatasetCatalog
 import random
 from PIL import ImageFile
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def my_dataset_function(ikDataset):
-    #returns a function that returns a list[dict] to be used as detectron2 dataset
+    # returns a function that returns a list[dict] to be used as detectron2 dataset
     if "category_colors" in ikDataset["metadata"]:
         category_colors = {}
-        for i,c in enumerate(ikDataset["metadata"]["category_colors"]):
-            category_colors[i]=c
+        for i, c in enumerate(ikDataset["metadata"]["category_colors"]):
+            category_colors[i] = c
     else:
         category_colors = None
 
     def f():
-        possible_masks = ["semantic_seg_masks_file","instance_seg_masks_file"]
+        possible_masks = ["semantic_seg_masks_file", "instance_seg_masks_file"]
         listDict = []
         for ikrecord in ikDataset["images"]:
-            record={}
+            record = {}
             record["image_id"] = ikrecord["image_id"]
-            record["file_name"] =ikrecord["filename"]
+            record["file_name"] = ikrecord["filename"]
             for possible in possible_masks:
                 if possible in ikrecord:
                     record["sem_seg_file_name"] = ikrecord[possible]
-            record["height"]=ikrecord["height"]
-            record["width"]=ikrecord["width"]
+            record["height"] = ikrecord["height"]
+            record["width"] = ikrecord["width"]
             if category_colors is not None:
-                record["category_colors"]={v: k for k, v in category_colors.items()}
+                record["category_colors"] = {v: k for k, v in category_colors.items()}
             listDict.append(record)
         return listDict
+
     return f
 
 
@@ -68,16 +70,17 @@ def rgb2mask(img, color2index):
 
     return mask
 
+
 class LossEvalHook(HookBase):
     def __init__(self, eval_period, model, data_loader, trainer, train_process, patience):
         self._model = model
         self._period = eval_period
         self._data_loader = data_loader
-        self.best_val_loss= np.inf
+        self.best_val_loss = np.inf
         self.patience = patience
         self.waiting = 0
-        self.trainer=trainer
-        self.train_process=train_process
+        self.trainer = trainer
+        self.train_process = train_process
 
     def _do_loss_eval(self):
         # Copying inference_on_dataset from evaluator.py
@@ -110,22 +113,22 @@ class LossEvalHook(HookBase):
             loss_batch = self._get_loss(inputs)
             losses.append(loss_batch)
         mean_loss = np.mean(losses)
-        tol = 1e10-4
-        if mean_loss<self.best_val_loss+tol:
-            self.best_val_loss=mean_loss
-            self.waiting=0
+        tol = 1e10 - 4
+        if mean_loss < self.best_val_loss + tol:
+            self.best_val_loss = mean_loss
+            self.waiting = 0
             print("Saving best model...")
             self.trainer.checkpointer.save("best_model")
             print("Model saved")
-        self.waiting+=1
+        self.waiting += 1
 
         self.trainer.storage.put_scalar('validation_loss', mean_loss)
 
-        metrics_dict = {k:v[0] for k,v in self.trainer.storage.latest().items()}
+        metrics_dict = {k: v[0] for k, v in self.trainer.storage.latest().items()}
         self.train_process.log_metrics(metrics_dict, self.trainer.iter)
 
-        if self.waiting>self.patience and self.patience>=0:
-            self.trainer.run=False
+        if self.waiting > self.patience and self.patience >= 0:
+            self.trainer.run = False
         comm.synchronize()
         return losses
 
@@ -145,24 +148,27 @@ class LossEvalHook(HookBase):
         if is_final or (self._period > 0 and next_iter % self._period == 0):
             self._do_loss_eval()
 
+
 class MyTrainer(DefaultTrainer):
     def __init__(self, cfg, train_process):
         """
         Args:
             cfg (CfgNode):
         """
-        self.run=True
-        self.train_process=train_process
+        self.run = True
+        self.train_process = train_process
         super().__init__(cfg)
 
     def build_lr_scheduler(cls, cfg, optimizer):
         return build_deeplab_lr_scheduler(cfg, optimizer)
 
     def build_train_loader(cls, cfg):
-        return build_detection_train_loader(cfg, mapper=MyMapper(True, augmentations=[T.Resize(cfg.INPUT_SIZE)], image_format="RGB"))
+        return build_detection_train_loader(cfg, mapper=MyMapper(True, augmentations=[T.Resize(cfg.INPUT_SIZE)],
+                                                                 image_format="RGB"))
 
     def build_evaluator(cfg, dataset_name):
-        return MySemSegEvaluator(dataset_name, distributed=False, output_dir="eval", num_classes=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES )
+        return MySemSegEvaluator(dataset_name, distributed=False, output_dir="eval",
+                                 num_classes=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES, ignore_label=255)
 
     def build_hooks(self):
         hooks = super().build_hooks()
@@ -192,7 +198,7 @@ class MyTrainer(DefaultTrainer):
             try:
                 self.before_train()
                 for self.iter in range(self.start_iter, self.max_iter):
-                    if not(self.run):
+                    if not (self.run):
                         break
                     self.before_step()
                     self.run_step()
@@ -208,13 +214,15 @@ class MyTrainer(DefaultTrainer):
             finally:
                 self.after_train()
 
+
 class MySemSegEvaluator(SemSegEvaluator):
     """
     Evaluate semantic segmentation metrics.
     """
 
-    def __init__(self, dataset_name, distributed, num_classes, ignore_label=255, output_dir=None):
-        super().__init__(dataset_name, distributed, num_classes, ignore_label=255, output_dir=None)
+    def __init__(self, dataset_name, distributed, output_dir, num_classes, ignore_label):
+        super().__init__(dataset_name, distributed=distributed, output_dir=output_dir, num_classes=num_classes,
+                         ignore_label=ignore_label)
 
     def process(self, inputs, outputs):
         """
@@ -227,7 +235,7 @@ class MySemSegEvaluator(SemSegEvaluator):
                 segmentation prediction in the same format.
         """
         for input, output in zip(inputs, outputs):
-            output =output["sem_seg"].argmax(dim=0).to(self._cpu_device)
+            output = output["sem_seg"].argmax(dim=0).to(self._cpu_device)
             pred = np.array(output, dtype=int)
             with PathManager.open(self.input_file_to_gt_file[input["file_name"]], "rb") as f:
                 gt = np.array(Image.open(f), dtype=int)
@@ -237,10 +245,11 @@ class MySemSegEvaluator(SemSegEvaluator):
             gt[gt == self._ignore_label] = self._num_classes
 
             self._conf_matrix += np.bincount(
-                self._N * pred.reshape(-1) + gt.reshape(-1), minlength=self._N ** 2
-            ).reshape(self._N, self._N)
+                (self._num_classes+1) * pred.reshape(-1) + gt.reshape(-1), minlength=(self._num_classes+1) ** 2
+            ).reshape((self._num_classes+1), (self._num_classes+1))
 
             self._predictions.extend(self.encode_json_sem_seg(pred, input["file_name"]))
+
 
 class MyMapper(DatasetMapper):
     def __init__(
@@ -275,12 +284,12 @@ class MyMapper(DatasetMapper):
             if "category_colors" in dataset_dict:
                 sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name"), "RGB")
                 sem_seg_gt = rgb2mask(sem_seg_gt, dataset_dict["category_colors"])
-            else :
+            else:
                 sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name"), "L")
                 sem_seg_gt = sem_seg_gt.squeeze(2)
 
-        else :
-            sem_seg_gt=None
+        else:
+            sem_seg_gt = None
 
         aug_input = T.AugInput(image, sem_seg=sem_seg_gt)
         transforms = self.augmentations(aug_input)
@@ -290,7 +299,7 @@ class MyMapper(DatasetMapper):
         # Therefore it's important to use torch.Tensor.
         dataset_dict["image"] = torch.as_tensor(np.ascontiguousarray(image.transpose(2, 0, 1)))
         if sem_seg_gt is not None:
-            dataset_dict["sem_seg"] = torch.as_tensor(sem_seg_gt,dtype=torch.long)
+            dataset_dict["sem_seg"] = torch.as_tensor(sem_seg_gt, dtype=torch.long)
 
         if not self.is_train:
             # USER: Modify this if you want to keep them for some reason.
@@ -298,17 +307,20 @@ class MyMapper(DatasetMapper):
             return dataset_dict
         return dataset_dict
 
-def register_train_test(dataset_dict,metadata,train_ratio=0.66,seed=0):
+
+def register_train_test(dataset_dict, metadata, train_ratio=0.66, seed=0):
     DatasetCatalog.clear()
     MetadataCatalog.clear()
-    nb_input= len(dataset_dict)
-    x=np.arange(nb_input)
+    nb_input = len(dataset_dict)
+    x = np.arange(nb_input)
     random.Random(seed).shuffle(x)
     idx_split = int(len(x) * train_ratio)
-    DatasetCatalog.register("datasetTrain", my_dataset_function({"images":np.array(dataset_dict)[x[:idx_split]],"metadata":metadata}))
-    DatasetCatalog.register("datasetTest", my_dataset_function({"images":np.array(dataset_dict)[x[idx_split:]],"metadata":metadata}))
-    MetadataCatalog.get("datasetTrain").stuff_classes = [v for k,v in metadata["category_names"].items()]
-    MetadataCatalog.get("datasetTest").stuff_classes = [v for k,v in metadata["category_names"].items()]
+    DatasetCatalog.register("datasetTrain", my_dataset_function(
+        {"images": np.array(dataset_dict)[x[:idx_split]], "metadata": metadata}))
+    DatasetCatalog.register("datasetTest", my_dataset_function(
+        {"images": np.array(dataset_dict)[x[idx_split:]], "metadata": metadata}))
+    MetadataCatalog.get("datasetTrain").stuff_classes = [v for k, v in metadata["category_names"].items()]
+    MetadataCatalog.get("datasetTest").stuff_classes = [v for k, v in metadata["category_names"].items()]
 
     """if ignoreValue is not None:
         MetadataCatalog.get("datasetTrain").ignore_label = ignoreValue"""
