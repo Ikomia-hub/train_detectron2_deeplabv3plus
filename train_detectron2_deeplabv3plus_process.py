@@ -225,7 +225,7 @@ class TrainDeeplabv3plusFactory(dataprocess.CTaskFactory):
                                 "You are able to monitor your training runs through the MLflow dashboard."
         self.info.authors = "Liang-Chieh Chen, Yukun Zhu, George Papandreou, Florian Schroff, Hartwig Adam"
         # relative path -> as displayed in Ikomia application process tree
-        self.info.path = "Plugins/Python/Train"
+        self.info.path = "Plugins/Python/Segmentation"
         self.info.version = "1.1.0"
         self.info.iconPath = "icons/detectron2.png"
         self.info.article = "Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation"
