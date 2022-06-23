@@ -309,8 +309,22 @@ class MyMapper(DatasetMapper):
 
 
 def register_train_test(dataset_dict, metadata, train_ratio=0.66, seed=0):
-    DatasetCatalog.clear()
-    MetadataCatalog.clear()
+    try:
+        DatasetCatalog.remove("datasetTrain")
+    except:
+        pass
+    try:
+        DatasetCatalog.remove("datasetTest")
+    except:
+        pass
+    try:
+        MetadataCatalog.remove("datasetTrain")
+    except:
+        pass
+    try:
+        MetadataCatalog.remove("datasetTest")
+    except:
+        pass
     nb_input = len(dataset_dict)
     x = np.arange(nb_input)
     random.Random(seed).shuffle(x)
