@@ -13,5 +13,5 @@ def test(t, data_dict):
     params["batchSize"] = 1
     params["evalPeriod"] = 5
     task.set_parameters(t, params)
-    input_dataset.load(data_dict["datasets"]["segmentation"]["dataset_wgisd"])
+    input_dataset.load(data_dict["datasets"]["semantic_segmentation"]["dataset_coco"])
     yield run_for_test(t)
