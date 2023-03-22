@@ -43,7 +43,7 @@ class TrainDeeplabv3plusParam(TaskParam):
         self.cfg["numGPU"] = 1
         self.cfg["outputFolder"] = ""
 
-    def setParamMap(self, param_map):
+    def set_values(self, param_map):
         # Set parameters values from Ikomia application
         # Parameters values are stored as string and accessible like a python dict
         self.cfg["modelName"] = param_map["modelName"]
@@ -80,18 +80,18 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
 
         # Create parameters class
         if param is None:
-            self.setParam(TrainDeeplabv3plusParam())
+            self.set_param_object(TrainDeeplabv3plusParam())
         else:
-            self.setParam(copy.deepcopy(param))
+            self.set_param_object(copy.deepcopy(param))
 
         self.trainer = None
-        self.enableTensorboard(False)
+        self.enable_tensorboard(False)
 
     def run(self):
         # Core function of your process
-        input = self.getInput(0)
+        input = self.get_input(0)
         # Get parameters :
-        param = self.getParam()
+        param = self.get_param_object()
 
         if len(input.data["images"]) > 0:
             param.cfg["epochs"] = int(param.cfg["maxIter"] * param.cfg["batchSize"] / len(input.data["images"]))
@@ -106,8 +106,8 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
 
             param.cfg["classes"] = len(input.data["metadata"]["category_names"])
 
-            # Call beginTaskRun for initialization
-            self.beginTaskRun()
+            # Call begin_task_run for initialization
+            self.begin_task_run()
 
             if param.cfg["expertModeCfg"] == "":
                 # Get default config
@@ -184,13 +184,13 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
             else:
                 print("Error : can't load config file "+param.cfg["expertModeCfg"])
 
-        # Call endTaskRun to finalize process
-        self.endTaskRun()
+        # Call end_task_run to finalize process
+        self.end_task_run()
 
-    def getProgressSteps(self):
+    def get_progress_steps(self):
         # Function returning the number of progress steps for this process
         # This is handled by the main progress bar of Ikomia application
-        param = self.getParam()
+        param = self.get_param_object()
         if param is not None:
             return param.cfg["maxIter"]
         else:
@@ -210,7 +210,7 @@ class TrainDeeplabv3plusFactory(dataprocess.CTaskFactory):
         dataprocess.CTaskFactory.__init__(self)
         # Set process information as string here
         self.info.name = "train_detectron2_deeplabv3plus"
-        self.info.shortDescription = "Training process for DeepLabv3+ model of Detectron2."
+        self.info.short_description = "Training process for DeepLabv3+ model of Detectron2."
         self.info.description = "Implementation from Detectron2 (Facebook Research). " \
                                 "This Ikomia plugin can train DeepLabV3+ model for semantic segmentation. " \
                                 "Most common parameters are exposed in the settings window. For expert usage, " \
@@ -226,14 +226,14 @@ class TrainDeeplabv3plusFactory(dataprocess.CTaskFactory):
         self.info.authors = "Liang-Chieh Chen, Yukun Zhu, George Papandreou, Florian Schroff, Hartwig Adam"
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Segmentation"
-        self.info.version = "1.1.0"
-        self.info.iconPath = "icons/detectron2.png"
+        self.info.version = "1.2.0"
+        self.info.icon_path = "icons/detectron2.png"
         self.info.article = "Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation"
         self.info.journal = "ECCV 2018"
         self.info.year = 2018
         self.info.license = "Apache-2.0 License"
         # URL of documentation
-        self.info.documentationLink = "https://detectron2.readthedocs.io/index.html"
+        self.info.documentation_link = "https://detectron2.readthedocs.io/index.html"
         # Code source repository
         self.info.repository = "https://github.com/facebookresearch/detectron2"
         # Keywords used for search

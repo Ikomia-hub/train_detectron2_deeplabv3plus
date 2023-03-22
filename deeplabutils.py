@@ -203,7 +203,7 @@ class MyTrainer(DefaultTrainer):
                     self.before_step()
                     self.run_step()
                     self.after_step()
-                    self.train_process.emitStepProgress()
+                    self.train_process.emit_step_progress()
                 # self.iter == max_iter can be used by `after_train` to
                 # tell whether the training successfully finished or failed
                 # due to exceptions.

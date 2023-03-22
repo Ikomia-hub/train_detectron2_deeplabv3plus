@@ -128,7 +128,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.gridLayout.addWidget(self.numGPUSpinBox, 10, 1, 1, 2)
         self.gridLayout.addWidget(output_label, 11, 0, 1, 1)
         self.gridLayout.addWidget(self.output_browse_widget, 11, 1, 1, 2)
-        self.setLayout(layout_ptr)
+        self.set_layout(layout_ptr)
 
     def showPatienceSpinBox(self):
         if self.earlyStoppingCheckBox.isChecked():
@@ -138,7 +138,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
             self.patienceLabel.hide()
             self.patienceSpinBox.hide()
 
-    def onApply(self):
+    def on_apply(self):
         # Apply button clicked slot
         # Get parameters from widget
         w, h = self.widthSpinBox.value(),self.heightSpinBox.value()
@@ -163,7 +163,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.parameters.cfg["outputFolder"] = self.output_browse_widget.path
 
         # Send signal to launch the process
-        self.emitApply(self.parameters)
+        self.emit_apply(self.parameters)
 
 
 # --------------------
