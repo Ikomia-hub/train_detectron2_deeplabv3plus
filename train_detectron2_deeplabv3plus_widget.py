@@ -29,43 +29,43 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.widthSpinBox = QSpinBox()
         self.widthSpinBox.setRange(16, 4096)
         self.widthSpinBox.setSingleStep(16)
-        self.widthSpinBox.setValue(self.parameters.cfg["inputWidth"])
+        self.widthSpinBox.setValue(self.parameters.cfg["input_width"])
 
         self.heightSpinBox = QSpinBox()
         self.heightSpinBox.setRange(16, 4096)
         self.heightSpinBox.setSingleStep(16)
-        self.heightSpinBox.setValue(self.parameters.cfg["inputHeight"])
+        self.heightSpinBox.setValue(self.parameters.cfg["input_height"])
 
         maxIterLabel = QLabel("Max iter:")
         self.maxIterSpinBox = QSpinBox()
         self.maxIterSpinBox.setRange(0, 2147483647)
         self.maxIterSpinBox.setSingleStep(1)
-        self.maxIterSpinBox.setValue(self.parameters.cfg["maxIter"])
+        self.maxIterSpinBox.setValue(self.parameters.cfg["max_iter"])
 
         batchSizeLabel = QLabel("Batch size:")
         self.batchSizeSpinBox = QSpinBox()
         self.batchSizeSpinBox.setRange(1, 2147483647)
         self.batchSizeSpinBox.setSingleStep(1)
-        self.batchSizeSpinBox.setValue(self.parameters.cfg["batchSize"])
+        self.batchSizeSpinBox.setValue(self.parameters.cfg["batch_size"])
 
         splitTrainTestLabel = QLabel("Train test percentage:")
         self.splitTrainTestSpinBox = QSpinBox()
         self.splitTrainTestSpinBox.setRange(0,100)
         self.splitTrainTestSpinBox.setSingleStep(1)
-        self.splitTrainTestSpinBox.setValue(self.parameters.cfg["splitTrainTest"])
+        self.splitTrainTestSpinBox.setValue(self.parameters.cfg["dataset_split_ratio"])
 
         evalPeriodLabel = QLabel("Evaluation period:")
         self.evalPeriodSpinBox = QSpinBox()
         self.evalPeriodSpinBox.setRange(0,2147483647)
         self.evalPeriodSpinBox.setSingleStep(1)
-        self.evalPeriodSpinBox.setValue(self.parameters.cfg["evalPeriod"])
+        self.evalPeriodSpinBox.setValue(self.parameters.cfg["eval_period"])
 
         baseLearningRateLabel = QLabel("Base learning rate:")
         self.baseLearningRateSpinBox = QDoubleSpinBox()
         self.baseLearningRateSpinBox.setRange(0, 10)
         self.baseLearningRateSpinBox.setDecimals(4)
         self.baseLearningRateSpinBox.setSingleStep(0.0001)
-        self.baseLearningRateSpinBox.setValue(self.parameters.cfg["learningRate"])
+        self.baseLearningRateSpinBox.setValue(self.parameters.cfg["learning_rate"])
 
         resnetDepthLabel = QLabel("Resnet depth:")
         self.resnetDepthComboBox = QComboBox()
@@ -87,7 +87,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.patienceSpinBox.hide()
 
         yaml_label = QLabel("Advanced YAML config:")
-        self.yaml_browse_widget = BrowseFileWidget(path=self.parameters.cfg["expertModeCfg"],
+        self.yaml_browse_widget = BrowseFileWidget(path=self.parameters.cfg["config"],
                                                mode=QFileDialog.ExistingFile)
 
         self.numGPUQLabel = QLabel("Number of GPU:")
@@ -98,7 +98,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
 
         # Output folder
         output_label = QLabel("Output folder:")
-        self.output_browse_widget = BrowseFileWidget(path=self.parameters.cfg["outputFolder"],
+        self.output_browse_widget = BrowseFileWidget(path=self.parameters.cfg["output_folder"],
                                                      tooltip="Select folder",
                                                      mode=QFileDialog.Directory)
 
@@ -143,24 +143,24 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         # Get parameters from widget
         w, h = self.widthSpinBox.value(),self.heightSpinBox.value()
         if w%16 == 0 and h%16 == 0:
-            self.parameters.cfg["inputWidth"] = w
-            self.parameters.cfg["inputHeight"] = h
+            self.parameters.cfg["input_width"] = w
+            self.parameters.cfg["input_height"] = h
         else:
-            self.parameters.cfg["inputWidth"] = w//16*16
-            self.parameters.cfg["inputHeight"] = h//16*16
+            self.parameters.cfg["input_width"] = w//16*16
+            self.parameters.cfg["input_height"] = h//16*16
             print("Width and Height must be multiples of 16, they have been changed to "+str(self.parameters.inputSize))
 
-        self.parameters.cfg["maxIter"] = self.maxIterSpinBox.value()
-        self.parameters.cfg["batchSize"] = self.batchSizeSpinBox.value()
-        self.parameters.cfg["splitTrainTest"] = self.splitTrainTestSpinBox.value()
-        self.parameters.cfg["evalPeriod"] = self.evalPeriodSpinBox.value()
-        self.parameters.cfg["learningRate"] = self.baseLearningRateSpinBox.value()
+        self.parameters.cfg["max_iter"] = self.maxIterSpinBox.value()
+        self.parameters.cfg["batch_size"] = self.batchSizeSpinBox.value()
+        self.parameters.cfg["dataset_split_ratio"] = self.splitTrainTestSpinBox.value()
+        self.parameters.cfg["eval_period"] = self.evalPeriodSpinBox.value()
+        self.parameters.cfg["learning_rate"] = self.baseLearningRateSpinBox.value()
         self.parameters.cfg["resnetDepth"] = str(self.resnetDepthComboBox.currentText())
         self.parameters.cfg["earlyStopping"] = self.earlyStoppingCheckBox.isChecked()
         self.parameters.cfg["patience"] = self.patienceSpinBox.value()
-        self.parameters.cfg["expertModeCfg"] = self.yaml_browse_widget.path
+        self.parameters.cfg["config"] = self.yaml_browse_widget.path
         self.parameters.cfg["numGPU"] = self.numGPUSpinBox.value()
-        self.parameters.cfg["outputFolder"] = self.output_browse_widget.path
+        self.parameters.cfg["output_folder"] = self.output_browse_widget.path
 
         # Send signal to launch the process
         self.emit_apply(self.parameters)
