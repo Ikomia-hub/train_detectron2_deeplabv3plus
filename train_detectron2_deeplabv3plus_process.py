@@ -93,7 +93,12 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
         # Get parameters :
         param = self.get_param_object()
 
-        if len(input.data["images"]) > 0:
+        try:
+            n_images = len(input.data["images"])
+        except:
+            raise Exception("Wrong input dataset")
+
+        if n_images:
             param.cfg["epochs"] = int(param.cfg["max_iter"] * param.cfg["batch_size"] / len(input.data["images"]))
 
             # complete class names if input dataset has no background class
@@ -183,6 +188,8 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
                     file.write(cfg.dump())
             else:
                 print("Error : can't load config file "+param.cfg["config"])
+        else:
+            print("Input dataset is empty")
 
         # Call end_task_run to finalize process
         self.end_task_run()
