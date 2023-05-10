@@ -87,7 +87,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.patienceSpinBox.hide()
 
         yaml_label = QLabel("Advanced YAML config:")
-        self.yaml_browse_widget = BrowseFileWidget(path=self.parameters.cfg["config"],
+        self.yaml_browse_widget = BrowseFileWidget(path=self.parameters.cfg["config_file"],
                                                mode=QFileDialog.ExistingFile)
 
         self.numGPUQLabel = QLabel("Number of GPU:")
@@ -158,7 +158,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.parameters.cfg["resnetDepth"] = str(self.resnetDepthComboBox.currentText())
         self.parameters.cfg["earlyStopping"] = self.earlyStoppingCheckBox.isChecked()
         self.parameters.cfg["patience"] = self.patienceSpinBox.value()
-        self.parameters.cfg["config"] = self.yaml_browse_widget.path
+        self.parameters.cfg["config_file"] = self.yaml_browse_widget.path
         self.parameters.cfg["numGPU"] = self.numGPUSpinBox.value()
         self.parameters.cfg["output_folder"] = self.output_browse_widget.path
 

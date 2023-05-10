@@ -35,7 +35,7 @@ class TrainDeeplabv3plusParam(TaskParam):
         self.cfg["batchNorm"] = "BN"
         self.cfg["ignoreValue"] = None
         self.cfg["learning_rate"] = 0.02
-        self.cfg["config"] = ""
+        self.cfg["config_file"] = ""
         self.cfg["eval_period"] = 100
         self.cfg["earlyStopping"] = False
         self.cfg["patience"] = 10
@@ -60,7 +60,7 @@ class TrainDeeplabv3plusParam(TaskParam):
         self.cfg["resnetDepth"] = int(param_map["resnetDepth"])
         self.cfg["batchNorm"] = param_map["batchNorm"]
         self.cfg["learning_rate"] = float(param_map["learning_rate"])
-        self.cfg["config"] = param_map["config"]
+        self.cfg["config_file"] = param_map["config_file"]
         self.cfg["eval_period"] = int(param_map["eval_period"])
         self.cfg["earlyStopping"] = bool(param_map["earlyStopping"])
         self.cfg["patience"] = int(param_map["patience"])
@@ -114,7 +114,7 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
             # Call begin_task_run for initialization
             self.begin_task_run()
 
-            if param.cfg["config"] == "":
+            if param.cfg["config_file"] == "":
                 # Get default config
                 cfg = get_cfg()
 
@@ -156,7 +156,7 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
                     print("Incorrect output folder path")
             else:
                 cfg = None
-                with open(param.cfg["config"], 'r') as file:
+                with open(param.cfg["config_file"], 'r') as file:
                     cfg_data = file.read()
                     cfg = CfgNode.load_cfg(cfg_data)
 
@@ -187,7 +187,7 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
                 with open(cfg.OUTPUT_DIR+"/Detectron2_DeepLabV3Plus_Train_Config.yaml", 'w') as file:
                     file.write(cfg.dump())
             else:
-                print("Error : can't load config file "+param.cfg["config"])
+                print("Error : can't load config file "+param.cfg["config_file"])
         else:
             print("Input dataset is empty")
 
