@@ -19,10 +19,11 @@
     </a> 
 </p>
 
-Implementation from Detectron2 (Facebook Research). This Ikomia plugin can train DeepLabV3+ model for semantic segmentation. Most common parameters are exposed in the settings window. For expert usage, it is also possible to select a custom configuration file.To start your training:create a new workflow, add a task node loading your dataset in Ikomia format (consult the marketplace to check if a suitable dataset loader already exists), add this DeepLabV3+ train task, adjust parameters, and click apply to start the training. You are able to monitor your training runs through the MLflow dashboard.
+ Train DeepLabV3+ model for semantic segmentation. Implementation from Detectron2 (Meta Research). 
 
-[Insert illustrative image here. Image must be accessible publicly, in algorithm Github repository for example.
-<img src="images/illustration.png"  alt="Illustrative image" width="30%" height="30%">]
+ ![Deeplabv3+ illustration](https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/master/samples/city_1_overlay.png?raw=true)
+
+
 
 ## :rocket: Use with Ikomia API
 
@@ -36,20 +37,27 @@ pip install ikomia
 
 #### 2. Create your workflow
 
-[Change the sample image URL to fit algorithm purpose]
 
 ```python
-import ikomia
 from ikomia.dataprocess.workflow import Workflow
 
 # Init your workflow
-wf = Workflow()
+wf = Workflow()    
 
-# Add algorithm
-algo = wf.add_task(name="train_detectron2_deeplabv3plus", auto_connect=True)
+# Add data loader
+coco = wf.add_task(name="dataset_coco")
 
-# Run on your image  
-wf.run_on(url="example_image.png")
+coco.set_parameters({
+    "json_file": "path/to/json/annotation/file",
+    "image_folder": "path/to/image/folder",
+    "task": "semantic_segmentation",
+}) 
+
+# Add train algorithm 
+train = wf.add_task(name="train_detectron2_deeplabv3plus", auto_connect=True)
+
+# Launch your training on your data
+wf.run()
 ```
 
 ## :sunny: Use with Ikomia Studio
@@ -62,56 +70,62 @@ Ikomia Studio offers a friendly UI with the same features as the API.
 
 ## :pencil: Set algorithm parameters
 
-[Explain each algorithm parameters]
 
-[Change the sample image URL to fit algorithm purpose]
+- **epochs** (int) - default '1000': Number of complete passes through the training dataset.
+- **max_iter** (int) - default '1000': Maximum number of iterations. 
+- **classes** (int) - default '2': Number of classes
+- **input_width** (int) - default '800': Size width of the input image.
+- **input_height** (int) - default '800': Size height of the input image.
+- **batch_size** (int) - default '4': Number of samples processed before the model is updated.
+- **learning_rate** (float) - default '0.02': Step size at which the model's parameters are updated during training.
+- **eval_period** (int) - default '100: Interval between evaluations.  
+- **dataset_split_ratio** (float) – default '90': Divide the dataset into train and evaluation sets ]0, 100[.
+- **output_folder** (str, *optional*): path to where the model will be saved. 
+- **config_file** (str, *optional*): path to the training config file .yaml. 
+- **warmupFactor** (float) - default '0.001': 
+- **warmupIters** (int) - default '200': 
+- **polyLRFactor** (float) - default '0.9': 
+- **polyLRConstantFactor** (float) - default '0.0': 
+- **resnetDepth** (int) - default '50': 
+- **batchNorm** (str) - default 'BN': 
+- **early_stopping** (bool) - default 'False': 
+- **patience** (int) - default '10': 
+- **numGPU** (int) - default '1': 
+
+**Parameters** should be in **strings format**  when added to the dictionary.
+
 
 ```python
-import ikomia
 from ikomia.dataprocess.workflow import Workflow
 
 # Init your workflow
-wf = Workflow()
+wf = Workflow()    
 
-# Add algorithm
-algo = wf.add_task(name="train_detectron2_deeplabv3plus", auto_connect=True)
+# Add data loader
+coco = wf.add_task(name="dataset_coco")
 
-algo.set_parameters({
-    "param1": "value1",
-    "param2": "value2",
-    ...
-})
+coco.set_parameters({
+    "json_file": "path/to/json/annotation/file",
+    "image_folder": "path/to/image/folder",
+    "task": "semantic_segmentation",
+}) 
 
-# Run on your image  
-wf.run_on(url="example_image.png")
+# Add train algorithm 
+train = wf.add_task(name="train_detectron2_deeplabv3plus", auto_connect=True)
+train.set_parameters({
+    "batch_size": "4",
+    "epochs": "50",
+    "learning_rate": "0.02",
+    "dataset_split_ratio": "80",
+    "max_iter": "1000",
+    "classes": "2",
+    "warmupFactor": "0.001",
+    "warmupIters": "200",
+    "polyLRFactor": "0.9",
+    "batchNorm": "BN",
+    "early_stopping": "False"
+}) 
 
+# Launch your training on your data
+wf.run()
 ```
-
-## :mag: Explore algorithm outputs
-
-Every algorithm produces specific outputs, yet they can be explored them the same way using the Ikomia API. For a more in-depth understanding of managing algorithm outputs, please refer to the [documentation](https://ikomia-dev.github.io/python-api-documentation/advanced_guide/IO_management.html).
-
-```python
-import ikomia
-from ikomia.dataprocess.workflow import Workflow
-
-# Init your workflow
-wf = Workflow()
-
-# Add algorithm
-algo = wf.add_task(name="train_detectron2_deeplabv3plus", auto_connect=True)
-
-# Run on your image  
-wf.run_on(url="example_image.png")
-
-# Iterate over outputs
-for output in algo.get_outputs()
-    # Print information
-    print(output)
-    # Export it to JSON
-    output.to_json()
-```
-
-## :fast_forward: Advanced usage 
-
-[optional]
