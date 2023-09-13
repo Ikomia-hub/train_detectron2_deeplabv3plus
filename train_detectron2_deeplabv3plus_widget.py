@@ -75,7 +75,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
 
         earlyStoppingLabel = QLabel("Early stopping:")
         self.earlyStoppingCheckBox = QCheckBox()
-        self.earlyStoppingCheckBox.setChecked(self.parameters.cfg["earlyStopping"])
+        self.earlyStoppingCheckBox.setChecked(self.parameters.cfg["early_stopping"])
         self.earlyStoppingCheckBox.clicked.connect(self.showPatienceSpinBox)
 
         self.patienceLabel = QLabel("Patience:")
@@ -156,7 +156,7 @@ class TrainDeeplabv3plusWidget(core.CWorkflowTaskWidget):
         self.parameters.cfg["eval_period"] = self.evalPeriodSpinBox.value()
         self.parameters.cfg["learning_rate"] = self.baseLearningRateSpinBox.value()
         self.parameters.cfg["resnetDepth"] = str(self.resnetDepthComboBox.currentText())
-        self.parameters.cfg["earlyStopping"] = self.earlyStoppingCheckBox.isChecked()
+        self.parameters.cfg["early_stopping"] = self.earlyStoppingCheckBox.isChecked()
         self.parameters.cfg["patience"] = self.patienceSpinBox.value()
         self.parameters.cfg["config_file"] = self.yaml_browse_widget.path
         self.parameters.cfg["numGPU"] = self.numGPUSpinBox.value()

@@ -37,7 +37,7 @@ class TrainDeeplabv3plusParam(TaskParam):
         self.cfg["learning_rate"] = 0.02
         self.cfg["config_file"] = ""
         self.cfg["eval_period"] = 100
-        self.cfg["earlyStopping"] = False
+        self.cfg["early_stopping"] = False
         self.cfg["patience"] = 10
         self.cfg["dataset_split_ratio"] = 90
         self.cfg["numGPU"] = 1
@@ -62,7 +62,7 @@ class TrainDeeplabv3plusParam(TaskParam):
         self.cfg["learning_rate"] = float(param_map["learning_rate"])
         self.cfg["config_file"] = param_map["config_file"]
         self.cfg["eval_period"] = int(param_map["eval_period"])
-        self.cfg["earlyStopping"] = bool(param_map["earlyStopping"])
+        self.cfg["early_stopping"] = bool(param_map["early_stopping"])
         self.cfg["patience"] = int(param_map["patience"])
         self.cfg["dataset_split_ratio"] = int(param_map["dataset_split_ratio"])
         self.cfg["numGPU"] = int(param_map["numGPU"])
@@ -143,7 +143,7 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
                 cfg.MODEL.BACKBONE.FREEZE_AT = 5
                 cfg.CLASS_NAMES = [name for k, name in input.data["metadata"]["category_names"].items()]
 
-                if param.cfg["earlyStopping"]:
+                if param.cfg["early_stopping"]:
                     cfg.PATIENCE = param.cfg["patience"]
                 else:
                     cfg.PATIENCE = -1
