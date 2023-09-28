@@ -11,6 +11,7 @@ from datetime import datetime
 import torch
 import gc
 
+
 # --------------------
 # - Class to handle the process parameters
 # - Inherits PyCore.CProtocolTaskParam from Ikomia API
@@ -207,6 +208,7 @@ class TrainDeeplabv3plus(dnntrain.TrainProcess):
         super().stop()
         self.trainer.run = False
 
+
 # --------------------
 # - Factory class to build process object
 # - Inherits PyDataProcess.CProcessFactory from Ikomia API
@@ -218,18 +220,6 @@ class TrainDeeplabv3plusFactory(dataprocess.CTaskFactory):
         # Set process information as string here
         self.info.name = "train_detectron2_deeplabv3plus"
         self.info.short_description = "Training process for DeepLabv3+ model of Detectron2."
-        self.info.description = "Implementation from Detectron2 (Facebook Research). " \
-                                "This Ikomia plugin can train DeepLabV3+ model for semantic segmentation. " \
-                                "Most common parameters are exposed in the settings window. For expert usage, " \
-                                "it is also possible to select a custom configuration file." \
-                                "To start your training:" \
-                                "create a new workflow, " \
-                                "add a task node loading your dataset in Ikomia format " \
-                                "(consult the marketplace to check if a suitable dataset loader already exists), " \
-                                "add this DeepLabV3+ train task, " \
-                                "adjust parameters, " \
-                                "and click apply to start the training. " \
-                                "You are able to monitor your training runs through the MLflow dashboard."
         self.info.authors = "Liang-Chieh Chen, Yukun Zhu, George Papandreou, Florian Schroff, Hartwig Adam"
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Segmentation"
@@ -242,7 +232,8 @@ class TrainDeeplabv3plusFactory(dataprocess.CTaskFactory):
         # URL of documentation
         self.info.documentation_link = "https://detectron2.readthedocs.io/index.html"
         # Code source repository
-        self.info.repository = "https://github.com/facebookresearch/detectron2"
+        self.info.repository = "https://github.com/Ikomia-hub/train_detectron2_deeplabv3plus"
+        self.info.original_repository = "https://github.com/facebookresearch/detectron2"
         # Keywords used for search
         self.info.keywords = "semantic, segmentation, detectron2, facebook, atrous, convolution, encoder, decoder"
 
